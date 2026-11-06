@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AquaTrack - Swim Tracker</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+  <!-- Three.js Library -->
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              400: '#38bdf8',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              900: '#0c4a6e'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    
+    
+
+    /* Glassmorphism & Depth Overlay Style */
+    .glass-card {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      box-shadow: 0 25px 50px rgba(2, 132, 199, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .glass-nav {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    /* Glowing Accents */
+    .glow-text {
+      text-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+    }
+
+    /* UI Layer Stacking */
+    header, main, div, section, #profile-modal {
+      position: relative;
+      z-index: 10;
+    }
+  
+#bg-layer{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+#bg-art{position:absolute;inset:0}#bg-art::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(2,6,23,.04),rgba(2,6,23,.3))}
+#bg-quote{position:absolute;left:4vw;bottom:5vh;max-width:84vw;font-weight:900;font-size:clamp(34px,7vw,96px);line-height:1;letter-spacing:-.02em;color:rgba(255,255,255,.18)}
+.bubble{position:absolute;bottom:-60px;border-radius:50%;border:1.5px solid rgba(186,230,253,.35);background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.35),transparent 60%);animation:rise linear infinite}
+@keyframes rise{to{transform:translateY(-115vh)}}
+@media (prefers-reduced-motion:reduce){.bubble{display:none}}@media (max-width:768px){.bubble:nth-of-type(n+4){display:none}}
+.nav-btn{display:flex;align-items:center;gap:.4rem;white-space:nowrap;padding:.4rem .8rem;border-radius:.75rem;font-size:.8rem;font-weight:500;color:#94a3b8;transition:.2s}.nav-btn:hover{color:#fff}
+.nav-btn.active{background:linear-gradient(135deg,#0284c7,#06b6d4);color:#fff;box-shadow:0 0 16px rgba(2,132,199,.55)}
+.mob-btn{flex:none;padding:.6rem 1rem;font-size:.75rem;font-weight:500;color:#94a3b8;white-space:nowrap}.mob-btn.active{color:#38bdf8;border-bottom:2px solid #38bdf8}
+.hero{background:linear-gradient(135deg,rgba(2,132,199,.45),rgba(6,182,212,.2) 55%,rgba(99,102,241,.35));box-shadow:0 10px 40px rgba(2,132,199,.25)}
+.grad-text{background:linear-gradient(90deg,#fff,#7dd3fc,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
+.chip-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem .9rem;border-radius:.75rem;font-size:.8rem;color:#e0f2fe;background:rgba(14,165,233,.22);border:1px solid rgba(125,211,252,.35);transition:.2s;cursor:pointer}.chip-btn:hover{background:rgba(14,165,233,.4);transform:translateY(-1px)}
+.glass-card:hover{border-color:rgba(56,189,248,.35)}
+.bg-tile{position:relative;height:92px;border-radius:14px;overflow:hidden;border:2px solid rgba(255,255,255,.12);text-align:left;padding:8px;cursor:pointer;transition:.2s}.bg-tile:hover{transform:scale(1.03)}
+.bg-tile-q{display:block;font-weight:900;font-size:10px;line-height:1.1;color:rgba(255,255,255,.75)}.bg-tile-n{position:absolute;left:8px;bottom:6px;font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 4px #000}
+.bg-tick{position:absolute;right:6px;top:6px;color:#34d399;display:none}.bg-tile.sel{border-color:#38bdf8;box-shadow:0 0 0 3px rgba(56,189,248,.35)}.bg-tile.sel .bg-tick{display:block}
+.dry-item{flex:none;display:flex;flex-direction:column;text-align:left;padding:.6rem .8rem;border-radius:.8rem;border:1px solid rgba(100,116,139,.35);background:rgba(15,23,42,.6);min-width:170px;transition:.2s}.dry-item:hover{border-color:#38bdf8}.dry-item.sel{background:linear-gradient(135deg,rgba(2,132,199,.5),rgba(6,182,212,.25));border-color:#38bdf8}
+.rank-card{border-radius:1rem;padding:.9rem 1rem;border:1px solid rgba(34,211,238,.55);background:linear-gradient(135deg,rgba(14,165,233,.38),rgba(168,85,247,.3));box-shadow:0 0 24px rgba(34,211,238,.28)}
+.rank-grad{background:linear-gradient(90deg,#fde047,#fb923c,#f472b6);-webkit-background-clip:text;background-clip:text;color:transparent}
+.rank-bar{position:relative;height:10px;border-radius:9999px;margin:14px 0 6px;background:linear-gradient(90deg,#ef4444,#f59e0b,#22d3ee,#34d399)}
+.rank-bar i{position:absolute;top:-4px;width:14px;height:18px;border-radius:6px;background:#fff;box-shadow:0 0 10px #fff,0 0 0 2px #0ea5e9}
+.save-pop{animation:savepop .45s ease}@keyframes savepop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen font-sans flex flex-col bg-slate-950 overflow-x-hidden">
+
+  
+  <div id="bg-layer" aria-hidden="true"><div id="bg-art"></div><div id="bg-quote"></div><span class="bubble" style="left:8%;width:14px;height:14px;animation-duration:26s;animation-delay:-3s"></span><span class="bubble" style="left:22%;width:22px;height:22px;animation-duration:34s;animation-delay:-10s"></span><span class="bubble" style="left:38%;width:10px;height:10px;animation-duration:22s;animation-delay:-6s"></span><span class="bubble" style="left:55%;width:18px;height:18px;animation-duration:30s;animation-delay:-15s"></span><span class="bubble" style="left:68%;width:12px;height:12px;animation-duration:24s;animation-delay:-2s"></span><span class="bubble" style="left:80%;width:26px;height:26px;animation-duration:38s;animation-delay:-20s"></span><span class="bubble" style="left:90%;width:9px;height:9px;animation-duration:20s;animation-delay:-8s"></span><span class="bubble" style="left:47%;width:16px;height:16px;animation-duration:28s;animation-delay:-12s"></span></div>
+
+  <!-- TOP HEADER -->
+  <header class="glass-nav sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Clickable Logo & Title -->
+      <a href="https://aquatrack.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 hover:scale-105 transition group">
+        <div class="p-2 bg-brand-500/20 text-brand-400 rounded-lg group-hover:bg-brand-500 group-hover:text-white transition shadow-[0_0_15px_rgba(56,189,248,0.4)]">
+          <i data-lucide="waves" class="w-6 h-6 animate-pulse"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight text-white flex items-center gap-2 glow-text">
+            AquaTrack 
+          </h1>
+          <p class="text-[11px] text-slate-400 group-hover:text-brand-400 transition">aquatrack.com <i data-lucide="external-link" class="w-3 h-3 inline"></i></p>
+        </div>
+      </a>
+
+      <!-- Navigation Tabs -->
+      <nav class="hidden md:flex gap-1 bg-slate-950/80 p-1.5 rounded-2xl border border-brand-500/30 shadow-inner overflow-x-auto max-w-[66vw]"><button onclick="switchTab('tracker')" id="nav-tracker" class="nav-btn"><i data-lucide="timer" class="w-4 h-4"></i> Log</button><button onclick="switchTab('leaderboard')" id="nav-leaderboard" class="nav-btn"><i data-lucide="trophy" class="w-4 h-4"></i> Leaderboard</button><button onclick="switchTab('standards')" id="nav-standards" class="nav-btn"><i data-lucide="award" class="w-4 h-4"></i> Standards</button><button onclick="switchTab('converter')" id="nav-converter" class="nav-btn"><i data-lucide="calculator" class="w-4 h-4"></i> Convert</button><button onclick="switchTab('stopwatch')" id="nav-stopwatch" class="nav-btn"><i data-lucide="clock" class="w-4 h-4"></i> Timers</button><button onclick="switchTab('dryland')" id="nav-dryland" class="nav-btn"><i data-lucide="dumbbell" class="w-4 h-4"></i> Dryland</button><button onclick="switchTab('builder')" id="nav-builder" class="nav-btn"><i data-lucide="sparkles" class="w-4 h-4"></i> Set Builder</button></nav>
+
+      <!-- Profile & Account Modal Opener -->
+      <div class="flex items-center space-x-3">
+        <span id="cl-hdr-mount" hidden></span>
+        <button onclick="switchTab('profile')" class="flex items-center gap-2 bg-slate-900/80 hover:bg-slate-800 border border-brand-500/40 px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-200 transition shadow-lg hover:shadow-brand-500/20">
+          <i data-lucide="user" class="w-4 h-4 text-brand-400"></i>
+          <span id="header-user-name">Swimmer Profile</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Nav Bar -->
+    <div class="md:hidden flex overflow-x-auto border-t border-slate-800 bg-slate-950/90"><button onclick="switchTab('tracker')" id="mob-tracker" class="mob-btn">Log</button><button onclick="switchTab('leaderboard')" id="mob-leaderboard" class="mob-btn">Leaderboard</button><button onclick="switchTab('standards')" id="mob-standards" class="mob-btn">Standards</button><button onclick="switchTab('converter')" id="mob-converter" class="mob-btn">Convert</button><button onclick="switchTab('stopwatch')" id="mob-stopwatch" class="mob-btn">Timers</button><button onclick="switchTab('dryland')" id="mob-dryland" class="mob-btn">Dryland</button><button onclick="switchTab('builder')" id="mob-builder" class="mob-btn">Set Builder</button></div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+
+    <!-- TAB 1: SWIM LOG & ANALYTICS -->
+    <section id="tab-tracker" class="space-y-6">
+<div class="hero relative overflow-hidden rounded-3xl p-6 sm:p-8 border border-cyan-300/30">
+  <div class="relative z-10"><p class="text-xs uppercase tracking-[.25em] text-cyan-200/80">Ready to swim?</p>
+  <h2 class="text-3xl sm:text-4xl font-black grad-text mt-1">Welcome back, <span id="hero-name">Swimmer</span></h2>
+  <p id="hero-quote" class="mt-2 text-slate-200 italic max-w-xl"></p>
+  <p id="hero-goal" class="mt-3 text-xs text-cyan-100/90"></p>
+  <div class="mt-4 flex flex-wrap gap-2"><button onclick="switchTab('stopwatch')" class="chip-btn"><i data-lucide="clock" class="w-4 h-4"></i> Start timers</button><button onclick="switchTab('dryland')" class="chip-btn"><i data-lucide="dumbbell" class="w-4 h-4"></i> Dryland today</button><button onclick="switchTab('builder')" class="chip-btn"><i data-lucide="sparkles" class="w-4 h-4"></i> Build a set</button></div></div>
+  <svg viewBox="0 0 1200 80" preserveAspectRatio="none" class="absolute bottom-0 left-0 w-full h-12" aria-hidden="true"><path d="M0,40 C200,80 400,0 600,40 C800,80 1000,0 1200,40 L1200,80 L0,80Z" fill="rgba(56,189,248,.2)"/><path d="M0,55 C250,15 450,75 700,45 C900,20 1050,60 1200,45 L1200,80 L0,80Z" fill="rgba(34,211,238,.16)"/></svg>
+</div>
+      
+      <!-- Top Stats Overview Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+          <div>
+            <p class="text-xs text-slate-400 font-medium">Total Swims Logged</p>
+            <h3 id="stat-total-swims" class="text-2xl font-black text-white mt-1 glow-text">0</h3>
+          </div>
+          <div class="p-3 bg-brand-500/20 text-brand-400 rounded-xl shadow-[0_0_10px_rgba(56,189,248,0.3)]"><i data-lucide="activity" class="w-5 h-5"></i></div>
+        </div>
+        <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+          <div>
+            <p class="text-xs text-slate-400 font-medium">Personal Bests (PBs)</p>
+            <h3 id="stat-pb-count" class="text-2xl font-black text-amber-400 mt-1 glow-text">0</h3>
+          </div>
+          <div class="p-3 bg-amber-500/20 text-amber-400 rounded-xl shadow-[0_0_10px_rgba(251,191,36,0.3)]"><i data-lucide="award" class="w-5 h-5"></i></div>
+        </div>
+        <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+          <div>
+            <p class="text-xs text-slate-400 font-medium">USA Standard Top Tier</p>
+            <h3 id="stat-top-tier" class="text-2xl font-black text-emerald-400 mt-1 glow-text">N/A</h3>
+          </div>
+          <div class="p-3 bg-emerald-500/20 text-emerald-400 rounded-xl shadow-[0_0_10px_rgba(52,211,153,0.3)]"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
+        </div>
+        <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+          <div>
+            <p class="text-xs text-slate-400 font-medium">Primary Stroke</p>
+            <h3 id="stat-top-stroke" class="text-2xl font-black text-brand-400 mt-1 glow-text">Free</h3>
+          </div>
+          <div class="p-3 bg-brand-500/20 text-brand-400 rounded-xl shadow-[0_0_10px_rgba(56,189,248,0.3)]"><i data-lucide="zap" class="w-5 h-5"></i></div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left Column: Add New Swim Form -->
+        <div class="glass-card rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4 border-b border-slate-700/60 pb-3">
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i data-lucide="plus-circle" class="w-5 h-5 text-brand-400"></i> Log Swim Time
+            </h2>
+            <span class="text-xs text-slate-400">Save Swim</span>
+          </div>
+
+          <form id="swim-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Distance</label>
+                <select id="input-distance" class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-400">
+                  <option value="50">50</option>
+                  <option value="100" selected>100</option>
+                  <option value="200">200</option>
+                  <option value="400">400 / 500 Free</option>
+                  <option value="800">800 / 1000 Free</option>
+                  <option value="1500">1500 / 1650 Free</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Stroke</label>
+                <select id="input-stroke" class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-400">
+                  <option value="Freestyle">Freestyle</option>
+                  <option value="Backstroke">Backstroke</option>
+                  <option value="Breaststroke">Breaststroke</option>
+                  <option value="Butterfly">Butterfly</option>
+                  <option value="IM">Individual Medley (IM)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Course Type</label>
+                <select id="input-course" class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-400">
+                  <option value="SCY">SCY (Short Course Yards - 25y)</option>
+                  <option value="LCM">LCM (Long Course Meters - 50m)</option>
+                  <option value="SCM">SCM (Short Course Meters - 25m)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Date</label>
+                <input type="date" id="input-date" required class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-400">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1">Time Achieved</label>
+              <div class="grid grid-cols-3 gap-2">
+                <div class="relative">
+                  <input type="number" id="input-min" min="0" max="59" placeholder="0" class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-400 pr-8">
+                  <span class="absolute right-2.5 top-2 text-xs text-slate-500">m</span>
+                </div>
+                <div class="relative">
+                  <input type="number" id="input-sec" min="0" max="59" placeholder="58" required class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-400 pr-8">
+                  <span class="absolute right-2.5 top-2 text-xs text-slate-500">s</span>
+                </div>
+                <div class="relative">
+                  <input type="number" id="input-ms" min="0" max="99" placeholder="45" required class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-400 pr-8">
+                  <span class="absolute right-2.5 top-2 text-xs text-slate-500">ms</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="live-standard-badge" class="bg-slate-950/80 rounded-xl p-3 border border-slate-700/80 flex items-center justify-between text-xs">
+              <span class="text-slate-400">USA Standard Tier:</span>
+              <span id="live-tier-val" class="font-black text-amber-400 glow-text">Calculating...</span>
+            </div>
+            <div id="live-rank" class="rank-card"></div>
+
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1">Meet Name / Notes</label>
+              <input type="text" id="input-notes" placeholder="e.g., Winter Sectionals" class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-400">
+            </div>
+
+            <button type="submit" class="w-full bg-gradient-to-r from-brand-500 to-cyan-500 hover:from-brand-600 hover:to-cyan-600 text-white font-bold py-3 rounded-xl shadow-[0_0_20px_rgba(2,132,199,0.5)] transition flex items-center justify-center gap-2 text-sm">
+              <i data-lucide="save" class="w-4 h-4"></i> Save Swim Time
+            </button>
+          </form>
+          <div id="save-result"></div>
+        </div>
+
+        <!-- Right Column: Chart & Table -->
+        <div class="lg:col-span-2 space-y-6">
+          
+          <div class="glass-card rounded-2xl p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <i data-lucide="trending-up" class="w-5 h-5 text-emerald-400"></i> Performance Progress
+              </h3>
+              <div class="flex items-center space-x-2">
+                <label class="text-xs text-slate-400">Filter Event:</label>
+                <select id="chart-filter-event" onchange="renderChart()" class="bg-slate-950 border border-slate-700/80 rounded-lg px-2.5 py-1 text-xs text-white">
+                </select>
+              </div>
+            </div>
+            <div class="h-56 relative">
+              <canvas id="progressionChart"></canvas>
+            </div>
+          </div>
+
+          <div class="glass-card rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <i data-lucide="list" class="w-5 h-5 text-brand-400"></i> Swim History Log
+              </h3>
+              <button onclick="clearAllLogs()" class="text-xs text-red-400 hover:text-red-300 transition">Clear All</button>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-700/60 text-slate-400 font-medium">
+                    <th class="py-2.5 px-3">Date</th>
+                    <th class="py-2.5 px-3">Event</th>
+                    <th class="py-2.5 px-3">Course</th>
+                    <th class="py-2.5 px-3">Time</th>
+                    <th class="py-2.5 px-3">USA Tier</th>
+                    <th class="py-2.5 px-3">Notes</th>
+                    <th class="py-2.5 px-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="history-table-body" class="divide-y divide-slate-800/60">
+                </tbody>
+              </table>
+              <div id="empty-history-msg" class="text-center py-8 text-slate-500 text-xs">
+                No swim records added yet. Fill in the form on the left to start tracking!
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 2: GLOBAL LEADERBOARD -->
+    <section id="tab-leaderboard" class="hidden space-y-6"><div class="glass-card rounded-2xl p-6">
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-700/60 pb-5"><div><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="trophy" class="w-6 h-6 text-amber-400"></i> My Leaderboard</h2><p class="text-xs text-slate-400 mt-1">Pick a stroke and distance to see where each of your logged swims places, fastest first.</p></div>
+  <div class="flex flex-wrap gap-2"><select id="leader-dist" onchange="updateLeaderboardView()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white "><option value="50">50</option><option value="100">100</option><option value="200">200</option><option value="400">400/500</option><option value="800">800/1000</option><option value="1500">1500/1650</option></select><select id="leader-stroke" onchange="updateLeaderboardView()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white "><option value="Freestyle">Freestyle</option><option value="Backstroke">Backstroke</option><option value="Breaststroke">Breaststroke</option><option value="Butterfly">Butterfly</option><option value="IM">IM</option></select><select id="leader-course" onchange="updateLeaderboardView()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white "><option value="SCY">SCY</option><option value="LCM">LCM</option><option value="SCM">SCM</option></select></div></div>
+  <p id="lb-summary" class="text-sm text-brand-300 font-semibold mt-4"></p>
+  <div class="overflow-x-auto mt-3"><table class="w-full text-left text-sm"><thead><tr class="text-xs text-slate-400 border-b border-slate-700"><th class="py-2 px-4">Place</th><th class="py-2 px-4">Swimmer</th><th class="py-2 px-4">Time</th><th class="py-2 px-4">Date</th><th class="py-2 px-4">Notes</th></tr></thead><tbody id="leaderboard-table-body" class="divide-y divide-slate-800/70"></tbody></table></div>
+  <p class="text-[11px] text-slate-500 mt-3">Places are based on swims saved in this app on this device. Ranking against other swimmers would need accounts and a server.</p></div>
+  <div id='fc-card' class='glass-card rounded-2xl p-5 space-y-4'>
+<div class='flex flex-wrap items-center gap-2'><h3 class='text-base font-black text-white flex items-center gap-2'><i data-lucide='users' class='w-5 h-5 text-cyan-300'></i> Friends Ranking</h3><span id='fc-msg' class='text-xs text-cyan-300'></span></div>
+<p class='text-xs text-slate-300'>No account needed. Make a short code with your best times, send it to your friends in your group chat, and paste theirs here. You are then ranked against each other in any event. Use the event menus above to switch events.</p>
+<div class='grid md:grid-cols-2 gap-4'>
+<div class='space-y-2'><div class='text-xs font-bold text-white'>1. Make your code</div><div class='flex gap-2'><input id='fc-nick' maxlength='24' placeholder='Nickname, not your full name' class='flex-1 min-w-0 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white'><button onclick='fcMakeCode()' class='px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-sm font-black'>Create</button></div><textarea id='fc-code' readonly rows='3' placeholder='Your code appears here' class='w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 font-mono text-[10px] text-slate-200'></textarea><button onclick='fcCopy("fc-code")' class='text-xs text-cyan-300 underline'>Copy my code</button></div>
+<div class='space-y-2'><div class='text-xs font-bold text-white'>2. Add your friends</div><textarea id='fc-paste' rows='4' placeholder='Paste one or many friend codes here' class='w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 font-mono text-[10px] text-slate-200'></textarea><button onclick='fcAdd()' class='px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-sm font-black'>Add friends</button></div>
+</div>
+<div><div class='flex flex-wrap items-center justify-between gap-2'><div class='text-xs font-bold text-white'>Ranking: <span id='fc-title' class='text-cyan-300'></span></div><button onclick='fcBundle()' class='text-xs text-cyan-300 underline'>Copy whole group bundle</button></div>
+<div class='overflow-x-auto mt-2'><table class='w-full text-left text-sm'><thead><tr class='text-xs text-slate-400 border-b border-slate-700'><th class='py-2 px-3'>#</th><th class='py-2 px-3'>Swimmer</th><th class='py-2 px-3'>Best</th><th class='py-2 px-3'>Behind</th><th class='py-2 px-3'>Est. rank for own age</th><th class='py-2 px-3'></th></tr></thead><tbody id='fc-body'></tbody></table></div>
+<textarea id='fc-bundle' readonly rows='3' class='hidden w-full mt-2 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 font-mono text-[10px] text-slate-200'></textarea></div>
+<p class='text-[11px] text-slate-400'>A code only holds your nickname, age group, gender and best times, and only the people you send it to can see it. Use a nickname. If you are under 18, ask a parent first. Codes do not update by themselves: after you swim faster, press Create again and resend. The group bundle lets one person send everyone's codes in one message.</p></div>
+<div id="cl-lb"></div>
+<div class="glass-card rounded-2xl p-6"><h3 class="text-sm font-bold text-white mb-3">My events at a glance</h3><div id="lb-overview" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"></div></div></section>
+<section id="tab-standards" class="hidden space-y-6"><div class="glass-card rounded-2xl p-6">
+  <h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="award" class="w-6 h-6 text-emerald-400"></i> USA Swimming Time Standards</h2>
+  <p class="text-xs text-slate-400 mt-1">2024-2028 Motivational Standards. Choose a group to see the cut times.</p>
+  <div class="flex flex-wrap items-end gap-2 mt-4"><select id="st-gender" onchange="renderStandards()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white "><option value="Male">Boys / Men</option><option value="Female">Girls / Women</option></select><select id="st-age" onchange="renderStandards()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white "><option value="10U">10U</option><option value="11-12">11-12</option><option value="13-14">13-14</option><option value="15-16">15-16</option><option value="17-18">17-18</option></select><select id="st-course" onchange="renderStandards()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white "><option value="SCY">SCY</option><option value="LCM">LCM</option><option value="SCM">SCM</option></select><button onclick="useProfileStd()" class="chip-btn text-xs">Use my profile</button></div>
+  <div id="st-table" class="overflow-x-auto mt-4"></div><p class="text-[11px] text-slate-500 mt-3">Loaded for short-course yards (SCY). 400 = the 500 free.</p></div>
+  <div class="glass-card rounded-2xl p-6"><h3 class="text-sm font-bold text-white mb-3">Check a time</h3>
+  <div class="flex flex-wrap items-center gap-2"><select id="st-event" onchange="checkStd()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white "><option value="50|Freestyle">50 Free</option><option value="100|Freestyle">100 Free</option><option value="200|Freestyle">200 Free</option><option value="400|Freestyle">500 Free</option><option value="100|Backstroke">100 Back</option><option value="100|Breaststroke">100 Breast</option><option value="100|Butterfly">100 Fly</option><option value="200|IM">200 IM</option></select>
+  <input id="st-min" oninput="checkStd()" type="number" min="0" placeholder="min" class="w-16 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white"><input id="st-sec" oninput="checkStd()" type="number" min="0" max="59" placeholder="sec" class="w-16 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white"><input id="st-ms" oninput="checkStd()" type="number" min="0" max="99" placeholder="hund." class="w-16 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white"></div>
+  <div id="st-result" class="mt-3 text-slate-300 text-sm"></div></div></section>
+
+    <!-- TAB 3: COURSE TIME CONVERTER -->
+    <section id="tab-converter" class="hidden space-y-6">
+      <div class="glass-card rounded-2xl p-6 max-w-3xl mx-auto">
+        <div class="border-b border-slate-700/60 pb-4 mb-6">
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i data-lucide="calculator" class="w-6 h-6 text-brand-400"></i> Pool Course Time Converter
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">Convert times accurately between SCY (Yards), SCM (Short Meters), and LCM (Long Meters).</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Source Course</label>
+            <select id="conv-source-course" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-sm text-white">
+              <option value="SCY">SCY (25 Yards)</option>
+              <option value="LCM">LCM (50 Meters)</option>
+              <option value="SCM">SCM (25 Meters)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Stroke Type</label>
+            <select id="conv-stroke" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-sm text-white">
+              <option value="Freestyle">Freestyle / Backstroke</option>
+              <option value="Breaststroke">Breaststroke</option>
+              <option value="Butterfly">Butterfly</option>
+              <option value="IM">IM</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Input Time</label>
+            <div class="flex space-x-1">
+              <input type="number" id="conv-min" placeholder="0m" class="w-1/3 bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white">
+              <input type="number" id="conv-sec" placeholder="58s" class="w-1/3 bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white">
+              <input type="number" id="conv-ms" placeholder="50ms" class="w-1/3 bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white">
+            </div>
+          </div>
+        </div>
+
+        <button onclick="executeConversion()" class="w-full bg-gradient-to-r from-brand-500 to-cyan-500 hover:from-brand-600 hover:to-cyan-600 text-white font-bold py-3 rounded-xl shadow-[0_0_20px_rgba(2,132,199,0.5)] transition">
+          Calculate Equivalent Times
+        </button>
+
+        <div id="conversion-results" class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 hidden">
+          <div class="bg-slate-950/80 p-4 rounded-xl border border-slate-800 text-center">
+            <span class="text-xs text-slate-400 uppercase font-semibold">SCY (Short Course Yards)</span>
+            <div id="res-scy" class="text-2xl font-bold text-brand-400 mt-2 glow-text">--:--.--</div>
+          </div>
+          <div class="bg-slate-950/80 p-4 rounded-xl border border-slate-800 text-center">
+            <span class="text-xs text-slate-400 uppercase font-semibold">LCM (Long Course Meters)</span>
+            <div id="res-lcm" class="text-2xl font-bold text-emerald-400 mt-2 glow-text">--:--.--</div>
+          </div>
+          <div class="bg-slate-950/80 p-4 rounded-xl border border-slate-800 text-center">
+            <span class="text-xs text-slate-400 uppercase font-semibold">SCM (Short Course Meters)</span>
+            <div id="res-scm" class="text-2xl font-bold text-purple-400 mt-2 glow-text">--:--.--</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: DECK STOPWATCH -->
+    <section id="tab-stopwatch" class="hidden space-y-6"><div class="glass-card rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="clock" class="w-6 h-6 text-brand-400"></i> Three-Lane Timer</h2><p class="text-xs text-slate-400 mt-1">Time up to three swimmers at once. Each lane has its own start, splits and reset.</p></div><div class="flex gap-2"><button onclick="startAll()" class="rounded-lg px-3 py-2 text-xs font-bold text-white bg-emerald-600">Start all</button><button onclick="stopAll()" class="rounded-lg px-3 py-2 text-xs font-bold text-white bg-amber-600">Pause all</button><button onclick="resetAll()" class="rounded-lg px-3 py-2 text-xs font-bold text-white bg-red-600/80">Reset all</button></div></div>
+<div class="grid md:grid-cols-3 gap-4"><div id="ln-0" class="glass-card rounded-2xl p-4"></div><div id="ln-1" class="glass-card rounded-2xl p-4"></div><div id="ln-2" class="glass-card rounded-2xl p-4"></div></div></section>
+
+
+<section id="tab-dryland" class="hidden space-y-6"><div class="glass-card rounded-2xl p-5"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="dumbbell" class="w-6 h-6 text-orange-400"></i> Dryland Workouts at Home</h2><p class="text-xs text-slate-400 mt-1">No equipment needed. Watch the movement, then follow the cues. The figure is an animated mannequin with human proportions and planted hands and feet, not a video.</p></div>
+<div id='dp-card' class='glass-card rounded-2xl p-5 space-y-4'><div class='flex flex-wrap items-center gap-2'><h3 class='text-base font-black text-white flex items-center gap-2'><i data-lucide='calendar-check' class='w-5 h-5 text-orange-300'></i> Your Home Dryland Plan</h3><span id='dp-for' class='text-xs text-cyan-300'></span></div><div class='flex flex-wrap gap-3 items-end'><div><label class='block text-[11px] text-slate-400 mb-1'>Primary stroke</label><select id='dp-stroke' onchange='dpTouched=true;renderPlan()' class='bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white'><option>Freestyle</option><option>Backstroke</option><option>Breaststroke</option><option>Butterfly</option><option>IM</option></select></div><div><label class='block text-[11px] text-slate-400 mb-1'>Minutes per training day</label><select id='dp-min' onchange='renderPlan()' class='bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white'><option value='30'>30</option><option value='45'>45</option><option value='60' selected>60</option></select></div></div><div id='dp-insight' class='rounded-xl bg-slate-950/60 border border-cyan-400/30 p-3 text-xs text-slate-200'></div><div id='dp-days' class='space-y-2'></div><p class='text-[11px] text-slate-400'>Mon, Wed and Fri are strength days (not back to back). Tue, Thu and Sat are shoulder, mobility and core days. Sunday is a full rest day, because every single day of training is not recommended for young athletes.</p><details class='rounded-xl bg-slate-950/60 border border-slate-800 p-3'><summary class='cursor-pointer text-xs font-bold text-cyan-300'>Evidence and honest limits</summary><div class='mt-2 space-y-2 text-xs text-slate-300'><p><b class='text-white'>Safe when done right.</b> The 2014 International Consensus on youth resistance training says well-designed, supervised strength training is safe and beneficial for young people, and that in-season strength work should replace some sport-specific sessions rather than just be added on top. <a class='text-cyan-300 underline' target='_blank' rel='noopener' href='https://bjsm.bmj.com/content/48/7/498'>British Journal of Sports Medicine</a></p><p><b class='text-white'>Dose.</b> 2 to 3 non-consecutive days a week, 1 to 3 sets of 6 to 15 repetitions, technique first and light loads for beginners. <a class='text-cyan-300 underline' target='_blank' rel='noopener' href='https://pmc.ncbi.nlm.nih.gov/articles/PMC3445252'>Review: Strength Training in Children and Adolescents</a></p><p><b class='text-white'>Does it make you faster? Not proven.</b> A systematic review of 16 swimming studies (Amaro and Morouço, Science and Sports, 2019) found 7 with no effect on swim performance. Benefits appeared mostly in older swimmers, and maximal-strength work worked best (6 to 12 weeks, 2 to 4 sessions a week). Most swimmers studied were male, so sex-specific advice is not proven. <a class='text-cyan-300 underline' target='_blank' rel='noopener' href='https://www.rdpc.uevora.pt/handle/10174/24344'>Source</a></p><p><b class='text-white'>Shoulders.</b> A 2022 systematic review found exercise programs improve shoulder risk factors in swimmers (rotator cuff strength and endurance, posture, range of motion), and short out-of-water programs with 5 or fewer exercises seemed to work best. This shows risk factors improve, not that injuries are prevented. <a class='text-cyan-300 underline' target='_blank' rel='noopener' href='https://pubmed.ncbi.nlm.nih.gov/35735465/'>PubMed</a></p><p><b class='text-white'>Rest.</b> American Academy of Pediatrics guidance: at least 1 day off a week, no more than 5 days a week in one sport, raise weekly training by no more than 10%, and take about 3 months a year off a specific sport. <a class='text-cyan-300 underline' target='_blank' rel='noopener' href='https://healthhub.cpcmg.net/docs/how-to-prevent-overuse-injuries'>AAP guidance (CPCMG copy)</a></p><p><b class='text-white'>Girls: landing and hip block.</b> A 2018 meta-analysis of 18 studies (American Journal of Sports Medicine) found neuromuscular training, meaning lower-body strength plus landing practice, roughly halved ACL injury risk in young female athletes. Those studies were in field and court sports, not swimming, so this block is general joint protection and not a speed claim. <a class='text-cyan-300 underline' target='_blank' rel='noopener' href='https://pmc.ncbi.nlm.nih.gov/articles/PMC6592422'>Source</a></p><p><b class='text-white'>Not proven by trials:</b> the stroke-specific exercise picks and the sprint versus endurance emphasis are coaching practice, and each block is tagged that way. This is not medical advice. Stop if you feel sharp pain, see a clinician for ongoing shoulder or knee pain, and ask your coach to adjust around your swim volume.</p></div></details></div>
+<div class="grid lg:grid-cols-[250px_1fr] gap-4"><div id="dry-list" class="glass-card rounded-2xl p-3 flex lg:flex-col gap-2 overflow-x-auto"></div>
+<div class="glass-card rounded-2xl p-4 space-y-4"><div class="relative rounded-2xl overflow-hidden border border-brand-400/20" style="background:radial-gradient(circle at 50% 0,#17406b,#0b1a2e 70%)"><svg viewBox="0 0 420 240" class="w-full block" role="img" aria-label="Animated exercise demonstration"><g id="dry-svg"></g></svg><div class="absolute top-3 left-3 px-3 py-1 rounded-full bg-slate-950/70 text-xs font-bold text-cyan-200" id="dry-count"></div><div class="absolute top-3 right-3 flex gap-1"><button onclick="drySpeed=0.5;this.parentNode.querySelectorAll(&quot;button&quot;).forEach(b=>b.classList.remove(&quot;bg-brand-500&quot;));this.classList.add(&quot;bg-brand-500&quot;)" class="px-2 py-1 rounded-full bg-slate-950/70 text-[11px] text-white ">0.5x</button><button onclick="drySpeed=1;this.parentNode.querySelectorAll(&quot;button&quot;).forEach(b=>b.classList.remove(&quot;bg-brand-500&quot;));this.classList.add(&quot;bg-brand-500&quot;)" class="px-2 py-1 rounded-full bg-slate-950/70 text-[11px] text-white bg-brand-500">1x</button><button onclick="drySpeed=1.5;this.parentNode.querySelectorAll(&quot;button&quot;).forEach(b=>b.classList.remove(&quot;bg-brand-500&quot;));this.classList.add(&quot;bg-brand-500&quot;)" class="px-2 py-1 rounded-full bg-slate-950/70 text-[11px] text-white ">1.5x</button></div></div>
+<div class="flex flex-wrap items-baseline gap-x-3"><h3 id="dry-title" class="text-xl font-black text-white"></h3><span id="dry-tag" class="text-xs text-cyan-300"></span><span id="dry-sets" class="ml-auto text-xs font-bold text-amber-300"></span></div>
+<div class="grid sm:grid-cols-2 gap-4"><div><h4 class="text-xs uppercase text-slate-400 mb-1">How to do it</h4><ul id="dry-cues" class="list-disc pl-5 text-sm text-slate-200 space-y-1"></ul></div><div><h4 class="text-xs uppercase text-slate-400 mb-1">Why swimmers do it</h4><p id="dry-why" class="text-sm text-slate-200"></p><p class="text-[11px] text-slate-500 mt-3">Stop if you feel sharp pain. Ask your coach before changing your routine.</p></div></div>
+<div class="rounded-xl bg-slate-950/60 border border-slate-800 p-3 text-xs text-slate-300"><b class="text-white">Sample 15-minute circuit:</b> Jumping jacks 40 s, Squats x15, Push-ups x10, Glute bridges x15, Plank 30 s, Mountain climbers 30 s. Rest 30 s between moves, 2 to 3 rounds.</div></div></div></section>
+<section id="tab-builder" class="hidden space-y-6"><div class="glass-card rounded-2xl p-6"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="sparkles" class="w-6 h-6 text-fuchsia-300"></i> Swim Set Builder</h2><p class="text-xs text-slate-400 mt-1">Describe your swim in your own words. This is a built-in coach that follows training rules on your device. It is not a live AI.</p>
+<textarea id="sb-text" rows="3" placeholder="Example: I have 45 minutes, intermediate swimmer, want to improve my 100 freestyle speed, left shoulder is sore" class="w-full mt-3 bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white"></textarea>
+<div id="sb-chips" class="flex flex-wrap gap-2 mt-3"></div><div class="flex gap-2 mt-4"><button onclick="runBuilder(false)" class="chip-btn font-bold">Build my set</button><button onclick="runBuilder(true)" class="chip-btn">Another version</button><button id="sb-copy" onclick="copySet()" class="chip-btn">Copy set</button></div></div>
+<div class="glass-card rounded-2xl p-6" id="sb-out"><div class="text-slate-500 text-sm">Your set will appear here.</div></div></section>
+<section id="tab-profile" class="hidden space-y-6">
+<div class="glass-card rounded-3xl overflow-hidden"><div class="relative h-28" style="background:linear-gradient(120deg,#0369a1,#06b6d4 55%,#6366f1)"><svg viewBox="0 0 1200 80" preserveAspectRatio="none" class="absolute bottom-0 w-full h-10"><path d="M0,40 C200,80 400,0 600,40 C800,80 1000,0 1200,40 L1200,80 L0,80Z" fill="rgba(11,18,32,.85)"/></svg></div>
+<div class="px-6 pb-6 -mt-12 flex flex-col sm:flex-row sm:items-end gap-4 relative z-10"><div id="pf-avatar" class="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-300 to-brand-500 border-4 border-slate-900 flex items-center justify-center text-3xl font-black text-slate-900 shadow-xl"></div><div><h2 id="pf-title" class="text-2xl font-black text-white"></h2><p id="pf-sub" class="text-sm text-slate-400"></p></div></div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 px-6 pb-6"><div class="rounded-xl bg-slate-950/60 border border-slate-800 p-3 text-center"><div id="pf-swims" class="text-xl font-black text-brand-300">0</div><div class="text-[11px] text-slate-400">Swims logged</div></div><div class="rounded-xl bg-slate-950/60 border border-slate-800 p-3 text-center"><div id="pf-events" class="text-xl font-black text-brand-300">0</div><div class="text-[11px] text-slate-400">Events swum</div></div><div class="rounded-xl bg-slate-950/60 border border-slate-800 p-3 text-center"><div id="pf-tier" class="text-xl font-black text-brand-300">0</div><div class="text-[11px] text-slate-400">Top USA level</div></div><div class="rounded-xl bg-slate-950/60 border border-slate-800 p-3 text-center"><div id="pf-dist" class="text-xl font-black text-brand-300">0</div><div class="text-[11px] text-slate-400">Total distance</div></div></div></div>
+<div id="cl-account"><div class="glass-card rounded-2xl p-6"><p class="text-sm text-slate-300">Accounts are not available in this copy of AquaTrack. <b class="text-white">Guest Mode works fully:</b> your swims are saved in this browser.</p></div></div>
+<div class="grid lg:grid-cols-2 gap-4"><form onsubmit="saveProfile(event)" class="glass-card rounded-2xl p-6 space-y-4"><h3 class="font-bold text-white flex items-center gap-2"><i data-lucide="user-check" class="w-5 h-5 text-brand-400"></i> Swimmer details</h3>
+<p class="text-xs text-slate-400">Your age group and gender decide which USA Swimming standards you are compared with.</p>
+<div><label class="block text-xs text-slate-300 mb-1">Name</label><input id="prof-name" required class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-sm text-white"></div>
+<div class="grid grid-cols-2 gap-3"><div><label class="block text-xs text-slate-300 mb-1">Gender</label><select id="prof-gender" onchange="liveProfileChange()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-sm text-white"><option value="Male">Boys / Men</option><option value="Female">Girls / Women</option></select></div><div><label class="block text-xs text-slate-300 mb-1">Age group</label><select id="prof-age-group" onchange="liveProfileChange()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-sm text-white"><option value="10U">10U</option><option value="11-12">11-12</option><option value="13-14">13-14</option><option value="15-16">15-16</option><option value="17-18">17-18</option></select></div></div>
+<div class="flex items-center gap-3"><button class="chip-btn font-bold" type="submit">Save profile</button><span id="pf-saved" class="text-xs text-emerald-400 opacity-0 transition">Saved</span></div></form>
+<div class="glass-card rounded-2xl p-6"><h3 class="font-bold text-white flex items-center gap-2"><i data-lucide="image" class="w-5 h-5 text-fuchsia-300"></i> App background</h3><p class="text-xs text-slate-400 mt-1 mb-4">Pick a look. It is saved on this device.</p><div id="bg-gallery" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div></div></div>
+<div class="grid lg:grid-cols-2 gap-4">
+<div class="glass-card rounded-2xl p-6 space-y-3"><h3 class="font-bold text-white flex items-center gap-2"><i data-lucide="target" class="w-5 h-5 text-orange-300"></i> Weekly goal and streak</h3>
+<div class="grid grid-cols-2 gap-3"><div class="rounded-xl bg-slate-950/60 border border-slate-800 p-3 text-center"><div id="pf-streak" class="text-2xl font-black text-orange-300">0</div><div class="text-[11px] text-slate-400">Day streak</div></div><div class="rounded-xl bg-slate-950/60 border border-slate-800 p-3 text-center"><div id="pf-week" class="text-2xl font-black text-emerald-300">0 m</div><div class="text-[11px] text-slate-400">Logged this week</div></div></div>
+<div class="h-3 rounded-full bg-slate-800 overflow-hidden"><div id="goal-bar" class="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 transition-all" style="width:0%"></div></div>
+<p id="goal-text" class="text-xs text-slate-300"></p>
+<div class="flex items-end gap-2"><div class="flex-1"><label class="block text-xs text-slate-300 mb-1">Weekly goal (meters)</label><input id="goal-input" type="number" min="0" step="100" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-sm text-white"></div><button type="button" onclick="saveGoal()" class="chip-btn font-bold">Save goal</button></div>
+<p class="text-[11px] text-slate-500">Each logged swim counts as its event distance. A streak is the number of days in a row with at least one logged swim.</p></div>
+<div class="glass-card rounded-2xl p-6 space-y-3"><h3 class="font-bold text-white flex items-center gap-2"><i data-lucide="database" class="w-5 h-5 text-cyan-300"></i> Backup and restore</h3>
+<p class="text-xs text-slate-400">Your swims are saved only in this browser. Download a backup so you never lose them, and import it to restore on any device.</p>
+<div class="flex flex-wrap gap-2"><button type="button" onclick="exportJson()" class="chip-btn font-bold">Export backup (JSON)</button><button type="button" onclick="exportCsv()" class="chip-btn">Export spreadsheet (CSV)</button><label class="chip-btn cursor-pointer">Import backup<input id="import-file" type="file" accept=".json,application/json" class="hidden" onchange="importJson(this)"></label></div>
+<p id="data-msg" class="text-xs text-slate-300 min-h-[1rem]"></p></div></div>
+</section>
+
+  </main>
+  <svg viewBox="0 0 1200 60" preserveAspectRatio="none" class="w-full h-10 opacity-60" aria-hidden="true"><path d="M0,30 C200,60 400,0 600,30 C800,60 1000,0 1200,30 L1200,60 L0,60Z" fill="#0ea5e9" fill-opacity=".25"/></svg>
+
+  <script>
+    /* ===== DATA SCOPE (guest vs account) =====
+       Guest Mode keeps using the ORIGINAL storage keys, so guests see no change.
+       A signed-in account gets its own separate keys: aqua_acct_<userId>_...
+       When someone signs out, that account's keys are erased from the browser. */
+    let dataScope = 'guest';
+    const SKEYS = {logs: 'aqua_swim_logs', profile: 'aqua_user_profile', goal: 'aqua_goal', friends: 'aqua_friends'};
+    const skey = name => dataScope === 'guest' ? SKEYS[name] : 'aqua_acct_' + dataScope + '_' + name;
+    function readJson(key, fallback) { try { const v = localStorage.getItem(key); return v == null ? fallback : JSON.parse(v); } catch (e) { return fallback; } }
+    const store = {
+      key: (name, scope) => scope === 'guest' ? SKEYS[name] : 'aqua_acct_' + scope + '_' + name,
+      get(name, scope, fallback) { return readJson(this.key(name, scope), fallback); },
+      set(name, scope, value) { localStorage.setItem(this.key(name, scope), JSON.stringify(value)); },
+      removeAccount(uid) { Object.keys(localStorage).filter(k => k.startsWith('aqua_acct_' + uid + '_')).forEach(k => localStorage.removeItem(k)); },
+      removeOtherAccounts(uid) { Object.keys(localStorage).filter(k => k.startsWith('aqua_acct_') && !k.startsWith('aqua_acct_' + uid + '_')).forEach(k => localStorage.removeItem(k)); }
+    };
+    /* Every swim gets a permanent unique id ("uid") so it can never be saved twice.
+       Old swims get a fixed uid worked out from their own contents. */
+    function cyrb53(str, seed = 0) { let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed; for (let i = 0; i < str.length; i++) { const ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); } h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909); return 4294967296 * (2097151 & h2) + (h1 >>> 0); }
+    const newUid = () => 'n' + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2, 12));
+    const legacyUid = l => 'L' + cyrb53([l.id, l.date, l.dist, l.stroke, l.course, l.timeSec].join('|')).toString(36);
+    function ensureUids(list) { let changed = false; list.forEach(l => { if (!l.uid) { l.uid = legacyUid(l); changed = true; } }); return changed; }
+    const DEFAULT_PROFILE = {name: 'Swimmer', gender: 'Male', ageGroup: '13-14'};
+    let swimLogs = readJson(skey('logs'), []); if (!Array.isArray(swimLogs)) swimLogs = [];
+    let userProfile = Object.assign({}, DEFAULT_PROFILE, readJson(skey('profile'), {}));
+    let chartInstance = null;
+
+    const STD_SCY = {"Girls|10U":{"50|Freestyle":[39.79,35.99,32.09,30.89,29.59,28.29],"100|Freestyle":[90.79,81.09,71.49,68.29,64.99,61.79],"200|Freestyle":[202.79,180.59,158.39,150.99,143.59,136.19],"400|Freestyle":[516.69,465.09,413.39,396.19,378.99,361.69],"100|Backstroke":[105.79,93.99,82.29,78.39,74.49,70.59],"100|Breaststroke":[120.29,106.89,93.59,89.09,84.69,80.19],"100|Butterfly":[116.69,101.39,86.09,80.99,75.99,70.89],"200|IM":[222.09,198.79,175.49,167.69,159.99,152.19]},"Girls|11-12":{"50|Freestyle":[33.99,31.69,29.29,28.09,26.99,25.79],"100|Freestyle":[74.69,69.39,63.99,61.39,58.69,55.99],"200|Freestyle":[162.59,150.89,139.29,133.49,127.69,121.89],"400|Freestyle":[436.89,405.69,374.49,358.89,343.29,327.69],"100|Backstroke":[86.59,79.79,72.99,69.59,66.19,62.69],"100|Breaststroke":[96.49,89.29,82.19,78.59,75.09,71.49],"100|Butterfly":[85.79,78.89,72.09,68.59,65.19,61.79],"200|IM":[183.89,170.69,157.59,150.99,144.49,137.89]},"Girls|13-14":{"50|Freestyle":[32.49,30.19,27.89,26.69,25.59,24.39],"100|Freestyle":[70.99,65.89,60.89,58.29,55.79,53.29],"200|Freestyle":[153.59,142.69,131.69,126.19,120.69,115.29],"400|Freestyle":[412.19,382.79,353.39,338.59,323.89,309.19],"100|Backstroke":[76.89,71.39,65.89,63.19,60.49,57.69],"100|Breaststroke":[88.69,82.29,75.99,72.89,69.69,66.49],"100|Butterfly":[76.79,71.29,65.89,63.09,60.39,57.59],"200|IM":[171.79,159.49,147.19,141.09,134.99,128.79]},"Girls|15-16":{"50|Freestyle":[31.79,29.49,27.29,26.09,24.99,23.89],"100|Freestyle":[68.79,63.79,58.89,56.49,53.99,51.59],"200|Freestyle":[148.99,138.39,127.69,122.39,117.09,111.79],"400|Freestyle":[400.99,372.39,343.69,329.39,315.09,300.79],"100|Backstroke":[74.69,69.39,64.09,61.39,58.69,56.09],"100|Breaststroke":[85.89,79.79,73.69,70.59,67.49,64.49],"100|Butterfly":[74.39,69.09,63.79,61.09,58.39,55.79],"200|IM":[166.19,154.29,142.39,136.49,130.59,124.59]},"Girls|17-18":{"50|Freestyle":[31.39,29.09,26.89,25.79,24.69,23.49],"100|Freestyle":[68.09,63.19,58.39,55.89,53.49,51.09],"200|Freestyle":[147.19,136.69,126.19,120.89,115.69,110.39],"400|Freestyle":[396.49,368.19,339.89,325.69,311.59,297.39],"100|Backstroke":[73.39,68.09,62.89,60.29,57.69,54.99],"100|Breaststroke":[84.79,78.79,72.69,69.69,66.69,63.59],"100|Butterfly":[73.59,68.29,63.09,60.39,57.79,55.19],"200|IM":[163.59,151.89,140.19,134.39,128.49,122.69]},"Boys|10U":{"50|Freestyle":[38.19,34.59,31.09,29.89,28.69,27.49],"100|Freestyle":[87.99,78.89,69.79,66.79,63.79,60.69],"200|Freestyle":[189.49,170.59,151.59,145.29,138.99,132.69],"400|Freestyle":[504.29,453.79,403.39,386.59,369.79,352.99],"100|Backstroke":[100.69,90.09,79.59,76.09,72.49,68.99],"100|Breaststroke":[114.09,102.29,90.59,86.59,82.69,78.79],"100|Butterfly":[113.49,98.99,84.39,79.49,74.59,69.79],"200|IM":[218.59,195.99,173.49,165.89,158.39,150.89]},"Boys|11-12":{"50|Freestyle":[32.79,30.49,28.09,26.99,25.79,24.49],"100|Freestyle":[71.49,66.39,61.29,58.69,56.19,53.29],"200|Freestyle":[155.99,144.89,133.69,128.19,122.59,115.89],"400|Freestyle":[419.89,389.99,359.99,344.99,329.99,312.99],"100|Backstroke":[82.19,75.69,69.29,65.99,62.79,59.49],"100|Breaststroke":[92.59,85.49,78.39,74.89,71.39,66.99],"100|Butterfly":[82.89,76.09,69.29,65.89,62.49,58.99],"200|IM":[179.29,165.79,152.29,145.59,138.79,130.69]},"Boys|13-14":{"50|Freestyle":[29.89,27.69,25.59,24.59,23.49,22.39],"100|Freestyle":[64.99,60.29,55.69,53.39,51.09,48.69],"200|Freestyle":[142.49,132.29,122.19,117.09,111.99,106.89],"400|Freestyle":[385.69,358.19,330.59,316.89,303.09,289.29],"100|Backstroke":[71.29,66.19,61.09,58.59,55.99,53.49],"100|Breaststroke":[80.49,74.79,68.99,66.19,63.29,60.39],"100|Butterfly":[70.49,65.49,60.39,57.89,55.39,52.89],"200|IM":[157.99,146.69,135.39,129.79,124.09,118.49]},"Boys|15-16":{"50|Freestyle":[28.29,26.29,24.19,23.19,22.19,21.19],"100|Freestyle":[61.99,57.59,53.19,50.99,48.79,46.49],"200|Freestyle":[135.99,126.29,116.59,111.79,106.89,101.99],"400|Freestyle":[368.39,342.09,315.79,302.69,289.49,276.29],"100|Backstroke":[67.49,62.69,57.89,55.49,53.09,50.69],"100|Breaststroke":[76.89,71.39,65.89,63.19,60.39,57.69],"100|Butterfly":[67.19,62.39,57.59,55.19,52.79,50.39],"200|IM":[150.89,140.19,129.39,123.99,118.59,113.19]},"Boys|17-18":{"50|Freestyle":[27.59,25.59,23.59,22.59,21.69,20.69],"100|Freestyle":[60.29,55.99,51.69,49.59,47.39,45.29],"200|Freestyle":[133.59,123.99,114.49,109.69,104.99,100.19],"400|Freestyle":[363.19,337.29,311.39,298.39,285.39,272.39],"100|Backstroke":[65.19,60.59,55.89,53.59,51.29,48.89],"100|Breaststroke":[74.69,69.39,63.99,61.39,58.69,55.99],"100|Butterfly":[65.39,60.79,56.09,53.69,51.39,49.09],"200|IM":[147.39,136.89,126.39,121.09,115.89,110.59]}};
+    const LEVELS = ['B','BB','A','AA','AAA','AAAA'];
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
+      updateProfileUI();
+      renderHistoryTable();
+      renderChart();
+      updateLeaderboardView();
+      calculateLiveStandard();
+      
+      ['input-min', 'input-sec', 'input-ms', 'input-distance', 'input-stroke', 'input-course'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', calculateLiveStandard);
+      });
+    });
+
+    function parseToSeconds(m, s, ms) {
+      return (parseInt(m) || 0) * 60 + (parseInt(s) || 0) + (parseInt(ms) || 0) / 100;
+    }
+
+    function formatTime(totalSec) {
+      if (!totalSec || isNaN(totalSec)) return "--:--.--";
+      const m = Math.floor(totalSec / 60);
+      const s = Math.floor(totalSec % 60);
+      const ms = Math.round((totalSec % 1) * 100);
+      return `${m > 0 ? m + ':' : ''}${s < 10 && m > 0 ? '0' : ''}${s}.${ms < 10 ? '0' : ''}${ms}`;
+    }
+
+    // 2024-2028 USA Swimming Motivational Standards (SCY only). Source: usaswimming.org motivational standards.
+    // Standards depend on gender + age group + event. 400 = the 500 free in SCY.
+    function getStandards(dist, stroke, course, g, a) {
+      if (course !== 'SCY') return null;
+      const cat = STD_SCY[((g || userProfile.gender) === 'Female' ? 'Girls' : 'Boys') + '|' + (a || userProfile.ageGroup)];
+      const arr = cat && cat[dist + '|' + stroke];
+      if (!arr) return null;
+      const o = {}; LEVELS.forEach((l, i) => o[l] = arr[i]); return o;
+    }
+    function getUSATier(distance, stroke, totalSec, course) {
+      const st = getStandards(distance, stroke, course || 'SCY');
+      if (!st) return 'N/A';
+      for (let i = LEVELS.length - 1; i >= 0; i--) if (totalSec <= st[LEVELS[i]]) return LEVELS[i];
+      return 'Below B';
+    }
+    const tierRank = t => LEVELS.indexOf(t);
+
+    // ---- Estimated ranking (from USA Swimming standards; not live Swimcloud data) ----
+    const ZA = [-0.253, 0.385, 1.036, 1.555, 2.054, 2.576]; // z for top 60/35/15/6/2/0.5 % at B..AAAA
+    const RANK_POOL = 1000;
+    function erfx(x) { const s = Math.sign(x); x = Math.abs(x); const t = 1 / (1 + 0.3275911 * x); return s * (1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x)); }
+    const fmtTop = p => 'Top ' + (p < 10 ? p.toFixed(1) : Math.round(p)) + '%';
+    function estimateRank(dist, stroke, sec, course, g, a) {
+      if (!(sec > 0)) return null;
+      const f = course === 'LCM' ? 1.11 : course === 'SCM' ? 1.09 : 1;
+      if (f !== 1 && dist === '400') return null;
+      const t = sec / f, st = getStandards(dist, stroke, 'SCY', g, a);
+      if (!st) return null;
+      const T = LEVELS.map(l => st[l]), seg = i => (ZA[i + 1] - ZA[i]) / (T[i] - T[i + 1]);
+      let z;
+      if (t >= T[0]) z = ZA[0] - (t - T[0]) * seg(0);
+      else if (t <= T[5]) z = ZA[5] + (T[5] - t) * seg(4);
+      else { let i = 0; while (t < T[i + 1]) i++; z = ZA[i] + (T[i] - t) * seg(i); }
+      const pct = Math.min(99, Math.max(0.1, (1 - 0.5 * (1 + erfx(z / Math.SQRT2))) * 100));
+      let ti = -1; for (let i = 0; i < 6; i++) if (t <= T[i]) ti = i;
+      const next = ti < 5 ? LEVELS[ti + 1] : null;
+      return { pct, rank: Math.max(1, Math.round(pct / 100 * RANK_POOL)), next, gap: next ? (t - T[ti + 1]) * f : 0 };
+    }
+    function rankMsg(rk) {
+      const a = `Faster than about ${Math.round(100 - rk.pct)} of every 100 swimmers in your age group.`;
+      return a + (rk.next ? ` ${rk.gap.toFixed(2)}s to reach ${rk.next}.` : ' You have hit AAAA, elite territory!');
+    }
+    const RANK_NOTE = '<div class="text-[10px] text-slate-300 mt-2">Estimate based on USA Swimming standards, not official Swimcloud data.</div>';
+    function rankChip(log) { const rk = estimateRank(log.dist, log.stroke, log.timeSec, log.course); return rk ? `<span class="ml-1 text-[10px] font-bold text-cyan-300">${fmtTop(rk.pct)}</span>` : ''; }
+    function renderLiveRank(dist, stroke, sec, course) {
+      const box = document.getElementById('live-rank'); if (!box) return;
+      const rk = sec > 0 ? estimateRank(dist, stroke, sec, course) : null;
+      if (!rk) { box.innerHTML = `<div class="text-xs text-slate-200 text-center py-1">${sec > 0 ? 'Ranking is not available for this event or course yet.' : 'Enter a time to see your estimated ranking.'}</div>`; return; }
+      const grp = (userProfile.gender === 'Female' ? 'Girls' : 'Boys') + ' ' + userProfile.ageGroup;
+      box.innerHTML = `<div class="flex items-end justify-between gap-3"><div><div class="text-[11px] font-bold uppercase tracking-widest text-cyan-200">Estimated ranking &middot; ${grp}</div><div class="rank-grad text-4xl font-black leading-none mt-1">${fmtTop(rk.pct)}</div></div><div class="text-right"><div class="text-xl font-black text-white">~#${rk.rank}</div><div class="text-[11px] text-slate-200">of ${RANK_POOL.toLocaleString()} swimmers</div></div></div><div class="rank-bar"><i style="left:calc(${(100 - rk.pct).toFixed(1)}% - 7px)"></i></div><div class="flex justify-between text-[10px] text-slate-300"><span>Slower</span><span>Faster</span></div><div class="text-xs text-white mt-2">${rankMsg(rk)}</div>${RANK_NOTE}`;
+    }
+    function showSaveResult(e, rk, prev) {
+      const el = document.getElementById('save-result'); if (!el) return;
+      const pb = prev == null ? 'First swim logged in this event!' : (e.timeSec < prev ? `New PB! ${(prev - e.timeSec).toFixed(2)}s faster than your previous best.` : `${(e.timeSec - prev).toFixed(2)}s off your best of ${formatTime(prev)}.`);
+      el.innerHTML = `<div class="rank-card save-pop mt-4"><div class="flex items-center gap-2 text-emerald-300 font-bold text-sm"><i data-lucide="check-circle-2" class="w-5 h-5"></i> Saved: ${e.dist} ${e.stroke} ${e.timeFormatted} (${e.course})</div>${rk ? `<div class="mt-2 flex items-end justify-between"><div class="rank-grad text-3xl font-black">${fmtTop(rk.pct)}</div><div class="text-right text-white font-black">~#${rk.rank}<span class="block text-[11px] font-normal text-slate-200">of ${RANK_POOL.toLocaleString()} swimmers</span></div></div><div class="text-xs text-white mt-1">${rankMsg(rk)}</div>` : '<div class="text-xs text-slate-200 mt-2">Ranking is not available for this event yet.</div>'}<div class="text-xs text-amber-300 mt-2 font-semibold">${pb}</div>${rk ? RANK_NOTE : ''}</div>`;
+      lucide.createIcons();
+    }
+
+    function calculateLiveStandard() {
+      const dist = document.getElementById('input-distance').value;
+      const stroke = document.getElementById('input-stroke').value;
+      const m = document.getElementById('input-min').value;
+      const s = document.getElementById('input-sec').value;
+      const ms = document.getElementById('input-ms').value;
+      
+      const course = document.getElementById('input-course').value;
+      const sec = parseToSeconds(m, s, ms);
+      const tier = sec > 0 ? getUSATier(dist, stroke, sec, course) : '-';
+      
+      const el = document.getElementById('live-tier-val');
+      el.textContent = tier;
+      renderLiveRank(dist, stroke, sec, course);
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const dist = document.getElementById('input-distance').value;
+      const stroke = document.getElementById('input-stroke').value;
+      const course = document.getElementById('input-course').value;
+      const date = document.getElementById('input-date').value;
+      const notes = document.getElementById('input-notes').value || "Practice Swim";
+      
+      const sec = parseToSeconds(
+        document.getElementById('input-min').value,
+        document.getElementById('input-sec').value,
+        document.getElementById('input-ms').value
+      );
+
+      if (sec <= 0) return;
+
+      const tier = getUSATier(dist, stroke, sec, course);
+      const prevSame = swimLogs.filter(l => l.dist === dist && l.stroke === stroke && l.course === course);
+      const prevBest = prevSame.length ? Math.min(...prevSame.map(l => l.timeSec)) : null;
+      const rk = estimateRank(dist, stroke, sec, course);
+
+      const newEntry = {
+        id: Date.now(),
+        uid: newUid(),
+        dist, stroke, course, date, notes,
+        timeSec: sec,
+        timeFormatted: formatTime(sec),
+        tier,
+        swimmerName: userProfile.name
+      };
+
+      swimLogs.unshift(newEntry);
+      saveLogs(); cloudNotify('add', newEntry);
+
+      renderHistoryTable();
+      renderChart();
+      updateLeaderboardView();
+
+      document.getElementById('input-sec').value = '';
+      document.getElementById('input-ms').value = '';
+      document.getElementById('input-notes').value = '';
+      showSaveResult(newEntry, rk, prevBest);
+      calculateLiveStandard();
+    }
+
+    function renderHistoryTable() {
+      const tbody = document.getElementById('history-table-body');
+      const emptyMsg = document.getElementById('empty-history-msg');
+      tbody.innerHTML = '';
+
+      if (swimLogs.length === 0) {
+        emptyMsg.classList.remove('hidden');
+        document.getElementById('stat-total-swims').textContent = '0';
+        document.getElementById('stat-pb-count').textContent = '0';
+        document.getElementById('stat-top-tier').textContent = 'N/A';
+        document.getElementById('stat-top-stroke').textContent = '-';
+        return;
+      }
+
+      emptyMsg.classList.add('hidden');
+      document.getElementById('stat-total-swims').textContent = swimLogs.length;
+
+      const eventPBs = {};
+      [...swimLogs].reverse().forEach(log => {
+        const key = `${log.dist}-${log.stroke}-${log.course}`;
+        if (!eventPBs[key] || log.timeSec < eventPBs[key]) {
+          eventPBs[key] = log.timeSec;
+        }
+      });
+
+      let pbCount = 0, topRank = -1, topTier = 'N/A';
+      swimLogs.forEach(log => {
+        const key = `${log.dist}-${log.stroke}-${log.course}`;
+        const isPB = log.timeSec === eventPBs[key];
+        const tierNow = getUSATier(log.dist, log.stroke, log.timeSec, log.course);
+        if (tierRank(tierNow) > topRank) { topRank = tierRank(tierNow); topTier = tierNow; }
+        if (isPB) pbCount++;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-800/40 transition";
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 text-slate-300">${log.date}</td>
+          <td class="py-2.5 px-3 font-medium text-white">${log.dist} ${log.stroke}</td>
+          <td class="py-2.5 px-3 text-slate-400">${log.course}</td>
+          <td class="py-2.5 px-3 font-mono font-bold text-brand-400">
+            ${log.timeFormatted}
+            ${isPB ? '<span class="ml-1 text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/40 px-1.5 py-0.5 rounded">PB</span>' : ''}
+          </td>
+          <td class="py-2.5 px-3">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${tierNow === 'AAAA' || tierNow === 'AAA' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-300'}">
+              ${tierNow}
+            </span>
+            ${rankChip(log)}
+          </td>
+          <td class="py-2.5 px-3 text-slate-400 max-w-[120px] truncate">${log.notes}</td>
+          <td class="py-2.5 px-3 text-right">
+            <button onclick="deleteLog(${log.id})" class="text-slate-500 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('stat-pb-count').textContent = pbCount;
+      document.getElementById('stat-top-tier').textContent = topTier;
+      const sc = {}; swimLogs.forEach(l => sc[l.stroke] = (sc[l.stroke] || 0) + 1);
+      document.getElementById('stat-top-stroke').textContent = Object.entries(sc).sort((a, b) => b[1] - a[1])[0][0];
+      lucide.createIcons();
+    }
+
+    function deleteLog(id) {
+      const gone = swimLogs.find(item => item.id === id);
+      swimLogs = swimLogs.filter(item => item.id !== id);
+      saveLogs(); if (gone) cloudNotify('del', gone);
+      renderHistoryTable();
+      renderChart();
+      updateLeaderboardView();
+    }
+
+    function clearAllLogs() {
+      const signedIn = window.Cloud && Cloud.isSignedIn && Cloud.isSignedIn();
+      if (confirm(signedIn ? "Clear all swim logs? Because you are signed in, this also deletes them from your account on all devices." : "Are you sure you want to clear all swim logs?")) {
+        swimLogs = [];
+        saveLogs(); cloudNotify('clear');
+        renderHistoryTable();
+        renderChart();
+        updateLeaderboardView();
+      }
+    }
+
+    function renderChart() {
+      const select = document.getElementById('chart-filter-event');
+      const events = [...new Set(swimLogs.map(l => `${l.dist} ${l.stroke} (${l.course})`))];
+
+      if (events.length === 0) {
+        select.innerHTML = `<option>No data available</option>`;
+        if (chartInstance) chartInstance.destroy();
+        return;
+      }
+
+      const currentSelection = select.value && events.includes(select.value) ? select.value : events[0];
+      select.innerHTML = events.map(e => `<option value="${e}" ${e === currentSelection ? 'selected' : ''}>${e}</option>`).join('');
+
+      const filteredLogs = swimLogs
+        .filter(l => `${l.dist} ${l.stroke} (${l.course})` === currentSelection)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      const ctx = document.getElementById('progressionChart').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: filteredLogs.map(l => l.date),
+          datasets: [{
+            label: `${currentSelection} Time (sec)`,
+            data: filteredLogs.map(l => l.timeSec),
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.2)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#38bdf8',
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#94a3b8' },
+              title: { display: true, text: 'Seconds', color: '#94a3b8' }
+            },
+            x: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#94a3b8' }
+            }
+          }
+        }
+      });
+    }
+
+    function executeConversion() {
+      const src = document.getElementById('conv-source-course').value;
+      const m = document.getElementById('conv-min').value;
+      const s = document.getElementById('conv-sec').value;
+      const ms = document.getElementById('conv-ms').value;
+
+      const totalSec = parseToSeconds(m, s, ms);
+      if (totalSec <= 0) return;
+
+      let scy, lcm, scm;
+
+      if (src === 'SCY') {
+        scy = totalSec;
+        lcm = totalSec * 1.11;
+        scm = totalSec * 1.09;
+      } else if (src === 'LCM') {
+        lcm = totalSec;
+        scy = totalSec / 1.11;
+        scm = totalSec / 1.02;
+      } else {
+        scm = totalSec;
+        scy = totalSec / 1.09;
+        lcm = totalSec * 1.02;
+      }
+
+      document.getElementById('res-scy').textContent = formatTime(scy);
+      document.getElementById('res-lcm').textContent = formatTime(lcm);
+      document.getElementById('res-scm').textContent = formatTime(scm);
+      document.getElementById('conversion-results').classList.remove('hidden');
+    }
+
+    let swInterval = null;
+    let swStartTime = 0;
+    let swElapsedTime = 0;
+    let swLaps = [];
+  </script>
+<script>
+const DL = (() => {
+/* ---------- DRYLAND: articulated human figure (forward kinematics + 2-bone IK, feet/hands stay planted) ---------- */
+const R = Math.PI / 180, GY = 200;
+const D = {torso: 50, neck: 8, head: 11, ua: 29, fa: 25, hand: 7, th: 44, sh: 42, foot: 19};
+const C = {skin: '#e3ab8c', skin2: '#c68a6c', top: '#0ea5e9', top2: '#0369a1', short: '#1e293b', short2: '#0f172a', shoe: '#f1f5f9', shoe2: '#94a3b8', hair: '#2b1d16'};
+const vd = a => [Math.sin(a * R), Math.cos(a * R)];
+const lerp = (a, b, t) => a + (b - a) * t;
+const mid = (p, q, t) => [lerp(p[0], q[0], t), lerp(p[1], q[1], t)];
+let clampHits = 0;
+function ik(S, T, l1, l2, b) {
+  const dx = T[0] - S[0], dy = T[1] - S[1], d = Math.hypot(dx, dy) || 1;
+  const mn = Math.abs(l1 - l2) + 0.5, mx = l1 + l2 - 0.3, dc = Math.min(Math.max(d, mn), mx);
+  if (dc !== d) clampHits++;
+  const ux = dx / d, uy = dy / d, a = (l1 * l1 - l2 * l2 + dc * dc) / (2 * dc), h = Math.sqrt(Math.max(0, l1 * l1 - a * a));
+  return [[S[0] + ux * a - uy * h * b, S[1] + uy * a + ux * h * b], [S[0] + ux * dc, S[1] + uy * dc]];
+}
+const f1 = n => n.toFixed(1);
+function cap(p, r, q, s, f) {
+  const dx = q[0] - p[0], dy = q[1] - p[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
+  return `<polygon points="${f1(p[0] + nx * r)},${f1(p[1] + ny * r)} ${f1(q[0] + nx * s)},${f1(q[1] + ny * s)} ${f1(q[0] - nx * s)},${f1(q[1] - ny * s)} ${f1(p[0] - nx * r)},${f1(p[1] - ny * r)}" fill="${f}"/><circle cx="${f1(p[0])}" cy="${f1(p[1])}" r="${r}" fill="${f}"/><circle cx="${f1(q[0])}" cy="${f1(q[1])}" r="${s}" fill="${f}"/>`;
+}
+function headSvg(H, nA, hairBack) {
+  const nv = [Math.sin(nA * R), -Math.cos(nA * R)], fv = [Math.cos(nA * R), Math.sin(nA * R)];
+  const f = (k, m) => [H[0] + fv[0] * k + nv[0] * m, H[1] + fv[1] * k + nv[1] * m];
+  const e = f(5.5, 1.5), n1 = f(10.5, -1), n2 = f(14, -4.5), n3 = f(10.5, -5.5);
+  return `<circle cx="${f1(H[0])}" cy="${f1(H[1])}" r="11" fill="${C.hair}"/><circle cx="${f1(H[0] + fv[0] * 2.4 - nv[0] * 1.2)}" cy="${f1(H[1] + fv[1] * 2.4 - nv[1] * 1.2)}" r="9.6" fill="${C.skin}"/><polygon points="${f1(n1[0])},${f1(n1[1])} ${f1(n2[0])},${f1(n2[1])} ${f1(n3[0])},${f1(n3[1])}" fill="${C.skin}"/><circle cx="${f1(e[0])}" cy="${f1(e[1])}" r="1.3" fill="#1e1b18"/>`;
+}
+function limbArm(S, sp, far) {
+  let e, w;
+  if (sp.t) [e, w] = ik(S, sp.t, D.ua, D.fa, sp.b);
+  else { const a = vd(sp.a1), c = vd(sp.a2); e = [S[0] + a[0] * D.ua, S[1] + a[1] * D.ua]; w = [e[0] + c[0] * D.fa, e[1] + c[1] * D.fa]; }
+  const dx = w[0] - e[0], dy = w[1] - e[1], L = Math.hypot(dx, dy) || 1, hd = [w[0] + dx / L * D.hand, w[1] + dy / L * D.hand];
+  const sk = far ? C.skin2 : C.skin, tp = far ? C.top2 : C.top;
+  return cap(S, 5, e, 4, sk) + cap(S, 5.9, mid(S, e, .55), 4.9, tp) + cap(e, 4, w, 3, sk) + cap(w, 3.3, hd, 3, sk);
+}
+function limbLeg(P, sp, far) {
+  let k, a;
+  if (sp.t) [k, a] = ik(P, sp.t, D.th, D.sh, sp.b);
+  else { const u = vd(sp.a1), c = vd(sp.a2); k = [P[0] + u[0] * D.th, P[1] + u[1] * D.th]; a = [k[0] + c[0] * D.sh, k[1] + c[1] * D.sh]; }
+  const fv = vd(sp.fa), T = [a[0] + fv[0] * D.foot, a[1] + fv[1] * D.foot];
+  const sk = far ? C.skin2 : C.skin, sh = far ? C.short2 : C.short, so = far ? C.shoe2 : C.shoe;
+  return cap(P, 8.6, k, 5.9, sk) + cap(P, 9.8, mid(P, k, .62), 7, sh) + cap(k, 5.6, a, 3.7, sk) + cap(a, 4.4, T, 3.4, so);
+}
+function sideSvg(o) {
+  const P = o.P, tA = o.tA, nA = o.nA == null ? tA : o.nA, tv = [Math.sin(tA * R), -Math.cos(tA * R)], nv = [Math.sin(nA * R), -Math.cos(nA * R)];
+  const S = [P[0] + tv[0] * D.torso, P[1] + tv[1] * D.torso], N = [S[0] + nv[0] * D.neck, S[1] + nv[1] * D.neck], H = [N[0] + nv[0] * D.head, N[1] + nv[1] * D.head];
+  const Sf = [S[0] + 2, S[1] - 1];
+  return limbArm(Sf, o.arms[1], true) + limbLeg(P, o.legs[1], true) + cap(P, 8.6, S, 9.2, C.top) + `<circle cx="${f1(P[0])}" cy="${f1(P[1])}" r="9.6" fill="${C.short}"/>` + cap(S, 3.9, N, 3.3, C.skin) + limbLeg(P, o.legs[0], false) + limbArm(S, o.arms[0], false) + headSvg(H, nA);
+}
+function frontSvg(o) {
+  const P = o.P, S = [P[0], P[1] - D.torso], H = [P[0], S[1] - D.neck - D.head + 1];
+  let out = `<polygon points="${f1(S[0] - 17)},${f1(S[1])} ${f1(S[0] + 17)},${f1(S[1])} ${f1(P[0] + 10)},${f1(P[1])} ${f1(P[0] - 10)},${f1(P[1])}" fill="${C.top}"/>`;
+  for (const sd of [-1, 1]) {
+    const hip = [P[0] + sd * 6, P[1]], k = [hip[0] + sd * Math.sin(o.la * R) * D.th, hip[1] + Math.cos(o.la * R) * D.th], a = [k[0] + sd * Math.sin(o.la * R) * D.sh, k[1] + Math.cos(o.la * R) * D.sh];
+    const sh = [S[0] + sd * 17, S[1] + 3], e = [sh[0] + sd * Math.sin(o.aa * R) * D.ua, sh[1] + Math.cos(o.aa * R) * D.ua], w = [e[0] + sd * Math.sin((o.aa + 8) * R) * D.fa, e[1] + Math.cos((o.aa + 8) * R) * D.fa], dl = Math.hypot(w[0] - e[0], w[1] - e[1]) || 1, hd = [w[0] + (w[0] - e[0]) / dl * D.hand, w[1] + (w[1] - e[1]) / dl * D.hand];
+    out = cap(hip, 8.4, k, 5.9, C.skin) + cap(hip, 9.4, mid(hip, k, .6), 7, C.short) + cap(k, 5.6, a, 3.7, C.skin) + cap(a, 4.4, [a[0] + sd * 6, a[1] + 3], 3.6, C.shoe) + out;
+    out += cap(sh, 5, e, 4, C.skin) + cap(sh, 5.9, mid(sh, e, .55), 4.9, C.top) + cap(e, 4, w, 3, C.skin) + cap(w, 3.3, hd, 3, C.skin);
+  }
+  out += `<polygon points="${f1(P[0] - 10)},${f1(P[1] - 6)} ${f1(P[0] + 10)},${f1(P[1] - 6)} ${f1(P[0] + 10)},${f1(P[1] + 5)} ${f1(P[0] - 10)},${f1(P[1] + 5)}" fill="${C.short}"/>` + cap(S, 4.2, [S[0], S[1] - D.neck], 3.6, C.skin);
+  out += `<circle cx="${f1(H[0])}" cy="${f1(H[1])}" r="11" fill="${C.skin}"/><path d="M${f1(H[0] - 11)},${f1(H[1] - 1)} a11,11 0 0 1 22,0 q-11,-7 -22,0z" fill="${C.hair}"/><circle cx="${f1(H[0] - 4)}" cy="${f1(H[1] + 1)}" r="1.2" fill="#1e1b18"/><circle cx="${f1(H[0] + 4)}" cy="${f1(H[1] + 1)}" r="1.2" fill="#1e1b18"/><path d="M${f1(H[0] - 3)},${f1(H[1] + 6)} q3,2.5 6,0" stroke="#7c3f2a" stroke-width="1.2" fill="none"/>`;
+  return out;
+}
+// ---------- poses ----------
+const ease = x => x * x * (3 - 2 * x);
+const hold = (u, h) => { const m = (1 - 2 * h) / 2; return u < m ? ease(u / m) : u < .5 ? 1 : u < .5 + m ? 1 - ease((u - .5) / m) : 0; };
+const FLAT = GY - 5, WR = GY - 10, TOE = GY - 3.4;
+const ankleToe = (tx, fa) => [tx - D.foot * Math.sin(fa * R), TOE - D.foot * Math.cos(fa * R)];
+function plankBody(A, sy) { // straight body line from ankle A to shoulder height sy
+  const Lb = D.th + D.sh + D.torso - .6, dy = sy - A[1], ux = Math.sqrt(Math.max(0, 1 - (dy / Lb) ** 2)), u = [ux, dy / Lb];
+  return {P: [A[0] + u[0] * (D.th + D.sh - .6), A[1] + u[1] * (D.th + D.sh - .6)], S: [A[0] + u[0] * Lb, A[1] + u[1] * Lb], tA: Math.atan2(u[0], -u[1]) / R};
+}
+const EX = [
+ {id: 'squat', name: 'Bodyweight Squat', view: 'side', period: 3.6, tag: 'Quads, glutes, core', sets: '3 x 15 reps', mat: false,
+  cues: ['Feet shoulder-width, weight through the whole foot', 'Sit hips back and down like sitting into a chair', 'Chest tall, knees track over the toes', 'Drive up through the heels and squeeze the glutes'], why: 'Builds the leg power behind your starts and wall pushoffs.',
+  pose: (u, t) => { const s = hold(u, .08), A = [190, FLAT]; return {P: [190 - 28 * s, FLAT - (84 - 39 * s)], tA: 2 + 33 * s, nA: 2 + 10 * s, arms: [{a1: 8 + 78 * s, a2: 12 + 76 * s}, {a1: 10 + 76 * s, a2: 14 + 74 * s}], legs: [{t: A, b: -1, fa: 90}, {t: [A[0] + 5, A[1]], b: -1, fa: 90}]}; }},
+ {id: 'pushup', name: 'Push-Up', view: 'side', period: 3.2, tag: 'Chest, triceps, shoulders, core', sets: '3 x 10 reps', mat: true,
+  cues: ['Hands under shoulders, body in one straight line', 'Lower until your chest is a fist away from the floor', 'Elbows about 45 degrees from the body', 'Press the floor away and keep your hips level'], why: 'The press phase matches your catch and push-through in every stroke.',
+  pose: (u, t) => { const s = hold(u, .1), A = ankleToe(110, 15), top = GY - 63.3, sy = lerp(top, GY - 22, s), b = plankBody(A, sy), xt = plankBody(A, top).S[0]; const w = [xt, WR]; return {P: b.P, tA: b.tA, nA: b.tA - 6, arms: [{t: w, b: 1}, {t: [w[0] + 3, w[1]], b: 1}], legs: [{t: b.P, b: -1, fa: 15}, {t: b.P, b: -1, fa: 15}].map(l => ({...l, t: [A[0], A[1]]}))}; }},
+ {id: 'plank', name: 'Forearm Plank', view: 'side', period: 4, tag: 'Deep core, shoulders', sets: '3 x 30-45 sec hold', mat: true, isHold: true,
+  cues: ['Elbows under shoulders, forearms flat', 'Squeeze glutes and brace like a streamline', 'Keep a straight line from head to heels', 'Breathe slowly, do not hold your breath'], why: 'A strong core keeps your hips high and your body streamlined.',
+  pose: (u, t) => { const A = ankleToe(110, 15), sy = GY - 35 - .9 * Math.sin(2 * Math.PI * u), b = plankBody(A, sy), w = [b.S[0] + 25, GY - 8]; return {P: b.P, tA: b.tA, nA: b.tA - 4, arms: [{t: w, b: 1}, {t: [w[0] + 2, w[1]], b: 1}], legs: [{t: A, b: -1, fa: 15}, {t: A, b: -1, fa: 15}]}; }},
+ {id: 'splitsquat', name: 'Split Squat (Lunge)', view: 'side', period: 3.6, tag: 'Quads, glutes, balance', sets: '3 x 10 per leg', mat: false,
+  cues: ['Long stance, front foot flat, back heel lifted', 'Drop straight down, not forward', 'Front knee over the ankle, torso tall', 'Push through the front heel to rise'], why: 'Single-leg strength improves kick power and balance on turns.',
+  pose: (u, t) => { const s = hold(u, .08), fr = [232, FLAT], bk = ankleToe(142, 20); return {P: [190, FLAT - (74 - 31 * s)], tA: 3, nA: 3, arms: [{a1: 6, a2: 9}, {a1: 9, a2: 12}], legs: [{t: fr, b: -1, fa: 90}, {t: bk, b: -1, fa: 20}]}; }},
+ {id: 'bridge', name: 'Glute Bridge', view: 'side', period: 3.6, tag: 'Glutes, hamstrings, lower back', sets: '3 x 15 reps', mat: true,
+  cues: ['Lie on your back, knees bent, feet flat', 'Push through your heels and lift the hips', 'Squeeze glutes at the top for a second', 'Lower slowly without arching the lower back'], why: 'Strong glutes and hamstrings drive a powerful flutter and dolphin kick.',
+  pose: (u, t) => { const s = hold(u, .12), al = 2 + 36 * s, S = [100, GY - 11], P = [S[0] + 50 * Math.cos(al * R), S[1] - 50 * Math.sin(al * R)], tA = Math.atan2(S[0] - P[0], -(S[1] - P[1])) / R; return {P, tA, nA: -90, arms: [{t: [S[0] + 47, WR + 3], b: 1}, {t: [S[0] + 43, WR + 3], b: 1}], legs: [{t: [S[0] + 98, FLAT], b: -1, fa: 90}, {t: [S[0] + 103, FLAT], b: -1, fa: 90}]}; }},
+ {id: 'climber', name: 'Mountain Climbers', view: 'side', period: 1.3, tag: 'Core, hip flexors, cardio', sets: '3 x 30 sec', mat: true,
+  cues: ['Start in a high plank, hands under shoulders', 'Drive one knee toward the chest at a time', 'Hips stay low and level, shoulders stay stacked', 'Keep a quick, steady rhythm'], why: 'Builds core stamina and fast hips for sprint kicking.',
+  pose: (u, t) => { const A = ankleToe(110, 15), b = plankBody(A, GY - 62), p = u * 2 * Math.PI, w = [b.S[0], WR], fw = [b.P[0] + 30, GY - 26]; const foot = c => ({t: [lerp(A[0], fw[0], c), lerp(A[1], fw[1], c) - 7 * Math.sin(Math.PI * c)], b: -1, fa: lerp(15, 70, c)}); const bob = 1.2 * Math.cos(2 * p); const bb = plankBody(A, GY - 62 + bob); return {P: bb.P, tA: bb.tA, nA: bb.tA - 6, arms: [{t: w, b: 1}, {t: [w[0] + 3, w[1]], b: 1}], legs: [foot(.5 - .5 * Math.cos(p)), foot(.5 + .5 * Math.cos(p))]}; }},
+ {id: 'jack', name: 'Jumping Jacks', view: 'front', period: 1.1, tag: 'Full body warm-up, shoulders', sets: '3 x 40 sec', mat: false,
+  cues: ['Land softly on the balls of your feet', 'Arms sweep fully overhead, feet wider than hips', 'Stay tall, keep your core tight', 'Breathe in a steady rhythm'], why: 'Warms up shoulders, calves and heart rate before any swim session.',
+  pose: (u, t) => { const s = hold(u, .05), la = 3 + 23 * s, hop = 7 * Math.sin(Math.PI * Math.min(1, s * 1.0)) * (u > .05 && u < .55 ? 1 : 0); return {P: [210, FLAT - 84 * Math.cos(la * R) - hop], la, aa: 9 + 150 * s}; }}
+];
+function figureSvg(ex, u, t) {
+  clampHits = 0; const o = ex.pose(u, t);
+  const floor = ex.mat ? `<rect x="28" y="${GY}" width="364" height="9" rx="4" fill="#0e7490"/><rect x="28" y="${GY}" width="364" height="2.5" rx="1.2" fill="#22d3ee" opacity=".6"/>` : `<rect x="20" y="${GY}" width="380" height="5" rx="2.5" fill="#1e3a5f"/>`;
+  const sx = o.P[0] + (ex.id === 'plank' || ex.id === 'pushup' || ex.id === 'climber' ? 30 : 0);
+  const shadow = `<ellipse cx="${f1(sx)}" cy="${GY + 3}" rx="${ex.view === 'front' ? 42 : 70}" ry="4" fill="#000" opacity=".28"/>`;
+  return floor + shadow + (ex.view === 'front' ? frontSvg(o) : sideSvg(o));
+}
+
+return {EX, figureSvg};
+})();
+/* ============ NEW FEATURES ============ */
+const TABS = ['tracker', 'leaderboard', 'standards', 'converter', 'stopwatch', 'dryland', 'builder', 'profile'];
+function switchTab(id) {
+  TABS.forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('hidden', t !== id);
+    const n = document.getElementById('nav-' + t), m = document.getElementById('mob-' + t);
+    if (n) { n.classList.toggle('active', t === id); }
+    if (m) { m.classList.toggle('active', t === id); }
+  });
+  if (id === 'leaderboard') updateLeaderboardView();
+  if (id === 'standards') initStandards();
+  if (id === 'profile') fillProfile();
+  if (id === 'dryland') { startDry(); renderPlan(); } else stopDry();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+  lucide.createIcons();
+}
+const mq = [...'0123456789'];
+/* ---- backgrounds ---- */
+const BGS = [
+  {n: 'Electric Blue', q: 'KEEP SWIMMING', c: 'linear-gradient(160deg,#1d2fd6,#0072ff 50%,#00d4ff)'},
+  {n: 'Sunrise Lanes', q: 'EVERY LAP COUNTS', c: 'repeating-linear-gradient(90deg,transparent 0 78px,rgba(255,255,255,.14) 78px 82px),linear-gradient(170deg,#6d28d9,#f43f5e 55%,#fbbf24)'},
+  {n: 'Tropical Lagoon', q: 'DIVE IN', c: 'radial-gradient(circle at 20% 15%,rgba(253,224,71,.6),transparent 40%),linear-gradient(160deg,#00c6ff,#0ea5a4 55%,#059669)'},
+  {n: 'Gold Podium', q: 'CHAMPIONS ARE MADE IN THE WATER', c: 'radial-gradient(circle at 70% 15%,rgba(255,240,170,.75),transparent 45%),linear-gradient(135deg,#b45309,#f59e0b 55%,#fcd34d)'},
+  {n: 'Aurora', q: 'BREATHE. PULL. REPEAT.', c: 'radial-gradient(ellipse at 25% 20%,rgba(52,211,153,.8),transparent 50%),radial-gradient(ellipse at 80% 35%,rgba(192,132,252,.75),transparent 50%),linear-gradient(#1e1b8f,#4338ca)'},
+  {n: 'Lane Lines', q: 'ONE MORE LENGTH', c: 'repeating-linear-gradient(90deg,#0ea5e9 0 54px,#0369a1 54px 58px,#0ea5e9 58px 112px,#ff2d55 112px 116px),linear-gradient(#38bdf8,#0369a1)'},
+  {n: 'Sunset Wave', q: 'MAKE WAVES', c: 'linear-gradient(165deg,#ff6a00,#ee0979 50%,#6a11cb)'},
+  {n: 'Ice Blue', q: 'FASTER THAN YESTERDAY', c: 'linear-gradient(165deg,#1d4ed8,#38bdf8 55%,#a5f3fc)'},
+  {n: 'Emerald Focus', q: 'TRUST THE PROCESS', c: 'radial-gradient(circle at 80% 10%,rgba(190,255,220,.55),transparent 45%),linear-gradient(160deg,#047857,#10b981 60%,#14b8a6)'},
+  {n: 'Neon Lane', q: 'OWN YOUR LANE', c: 'radial-gradient(circle at 15% 80%,rgba(255,0,153,.75),transparent 45%),radial-gradient(circle at 85% 20%,rgba(0,229,255,.75),transparent 45%),linear-gradient(#2a0f7a,#4c1d95)'}
+];
+let bgIndex = +(localStorage.getItem('aqua_bg') || 0);
+function applyBg(i) {
+  bgIndex = i; localStorage.setItem('aqua_bg', i);
+  document.getElementById('bg-art').style.background = BGS[i].c;
+  document.getElementById('bg-quote').textContent = BGS[i].q;
+  document.querySelectorAll('.bg-tile').forEach((t, k) => t.classList.toggle('sel', k === i));
+}
+function renderBgGallery() {
+  document.getElementById('bg-gallery').innerHTML = BGS.map((b, i) => `<button type="button" onclick="applyBg(${i})" class="bg-tile ${i === bgIndex ? 'sel' : ''}" style="background:${b.c}"><span class="bg-tile-q">${b.q}</span><span class="bg-tile-n">${b.n}</span><i data-lucide="check-circle-2" class="bg-tick w-5 h-5"></i></button>`).join('');
+}
+/* ---- hero + profile ---- */
+const QUOTES = ['Every lap is a vote for who you want to become.', 'The water does not care how you feel. Show up anyway.', 'Small improvements, stacked daily, win races.', 'Fast swimmers are made in the boring sets.', 'Breathe. Pull. Repeat.', 'You are one practice away from a better swim.', 'Chase your own best time, not anyone else\'s.'];
+function updateProfileUI() {
+  document.getElementById('header-user-name').textContent = `${userProfile.name} (${userProfile.ageGroup})`;
+  const h = document.getElementById('hero-name'); if (h) h.textContent = userProfile.name;
+}
+function fillProfile() {
+  document.getElementById('prof-name').value = userProfile.name;
+  document.getElementById('prof-gender').value = userProfile.gender;
+  document.getElementById('prof-age-group').value = userProfile.ageGroup;
+  const nm = (userProfile.name || 'S').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  document.getElementById('pf-avatar').textContent = nm;
+  document.getElementById('pf-title').textContent = userProfile.name;
+  document.getElementById('pf-sub').textContent = `${userProfile.gender === 'Female' ? 'Girls/Women' : 'Boys/Men'} - age group ${userProfile.ageGroup}`;
+  const g = id => document.getElementById(id).textContent;
+  document.getElementById('pf-swims').textContent = swimLogs.length;
+  document.getElementById('pf-events').textContent = new Set(swimLogs.map(l => l.dist + l.stroke + l.course)).size;
+  document.getElementById('pf-tier').textContent = g('stat-top-tier');
+  document.getElementById('pf-dist').textContent = swimLogs.reduce((a, l) => a + (parseInt(l.dist) || 0), 0).toLocaleString() + ' m';
+  renderBgGallery(); lucide.createIcons();
+}
+function openProfileModal() { switchTab('profile'); }
+function saveLogs() { localStorage.setItem(skey('logs'), JSON.stringify(swimLogs)); }
+function cloudNotify(kind, payload) { try { if (window.Cloud && Cloud.notify) Cloud.notify(kind, payload); } catch (e) { console.warn('cloud notify failed', e); } }
+function refreshAll() {
+  refreshAfterProfile(); refreshGoals(); if (typeof fcRender === 'function') fcRender();
+  if (window.Cloud && Cloud.renderAccount) { Cloud.renderAccount(); Cloud.refreshLeaderboard(false); }
+}
+function useScope(scope) {   // switch between Guest data and an account's data
+  dataScope = scope;
+  swimLogs = readJson(skey('logs'), []); if (!Array.isArray(swimLogs)) swimLogs = [];
+  if (ensureUids(swimLogs)) saveLogs();
+  userProfile = Object.assign({}, DEFAULT_PROFILE, readJson(skey('profile'), {}));
+  if (typeof fcData !== 'undefined') fcData = null;   // friends list is separate per account too
+  refreshAll();
+}
+/* AQ = the small "bridge" that cloud.js uses to talk to this page */
+window.AQ = {
+  store, newUid, legacyUid, ensureUids, hash: s => cyrb53(String(s)).toString(36),
+  getScope: () => dataScope, logs: () => swimLogs, profile: () => userProfile, goal: () => getGoal(),
+  setScope: useScope,
+  replaceLogs(list) { swimLogs = list; saveLogs(); refreshAll(); },
+  applySettings(p, g) {
+    if (p && typeof p === 'object') { userProfile = {name: String(p.name || 'Swimmer').slice(0, 60), gender: p.gender === 'Female' ? 'Female' : 'Male', ageGroup: ['10U', '11-12', '13-14', '15-16', '17-18'].includes(p.ageGroup) ? p.ageGroup : userProfile.ageGroup}; localStorage.setItem(skey('profile'), JSON.stringify(userProfile)); }
+    if (g != null && Number.isFinite(Number(g))) localStorage.setItem(skey('goal'), String(Math.max(0, parseInt(g) || 0)));
+    refreshAll();
+  },
+  applyGuestProfile() { const gp = readJson(SKEYS.profile, null), gg = localStorage.getItem(SKEYS.goal); this.applySettings(gp, gg); },
+  backup(list) { saveFile(`aquatrack-guest-backup-${stamp()}.json`, JSON.stringify({app: 'AquaTrack', version: 2, exported: new Date().toISOString(), logs: list}, null, 1), 'application/json'); }
+};
+function refreshAfterProfile() {
+  updateProfileUI(); renderHistoryTable(); renderChart(); updateLeaderboardView(); calculateLiveStandard(); useProfileStd(); fillProfile(); if (typeof renderPlan === 'function') renderPlan();
+}
+function liveProfileChange() {
+  userProfile = {name: document.getElementById('prof-name').value.trim() || 'Swimmer', gender: document.getElementById('prof-gender').value, ageGroup: document.getElementById('prof-age-group').value};
+  localStorage.setItem(skey('profile'), JSON.stringify(userProfile)); cloudNotify('settings');
+  refreshAfterProfile();
+}
+function saveProfile(e) {
+  e.preventDefault();
+  userProfile = {name: document.getElementById('prof-name').value.trim() || 'Swimmer', gender: document.getElementById('prof-gender').value, ageGroup: document.getElementById('prof-age-group').value};
+  localStorage.setItem(skey('profile'), JSON.stringify(userProfile)); cloudNotify('settings');
+  refreshAfterProfile();
+  const t = document.getElementById('pf-saved'); t.classList.remove('opacity-0'); setTimeout(() => t.classList.add('opacity-0'), 1800);
+}
+/* ---- leaderboard: only swims logged in this app ---- */
+const EVLBL = {'400|Freestyle': '400/500 Free', '800|Freestyle': '800/1000 Free', '1500|Freestyle': '1500/1650 Free'};
+const evName = (d, s) => EVLBL[d + '|' + s] || `${d} ${s === 'Freestyle' ? 'Free' : s === 'Backstroke' ? 'Back' : s === 'Breaststroke' ? 'Breast' : s === 'Butterfly' ? 'Fly' : s}`;
+function updateLeaderboardView() {
+  if (typeof fcRender === 'function') fcRender();
+  if (window.Cloud && Cloud.refreshLeaderboard) Cloud.refreshLeaderboard(false);
+  const dist = document.getElementById('leader-dist').value, stroke = document.getElementById('leader-stroke').value, course = document.getElementById('leader-course').value;
+  const mine = swimLogs.filter(l => l.dist === dist && l.stroke === stroke && l.course === course).sort((a, b) => a.timeSec - b.timeSec);
+  document.getElementById('lb-summary').textContent = mine.length ? `${evName(dist, stroke)} ${course}: ${mine.length} swim${mine.length > 1 ? 's' : ''} logged, best ${formatTime(mine[0].timeSec)}` : `${evName(dist, stroke)} ${course}: no swims logged yet`;
+  const body = document.getElementById('leaderboard-table-body'); body.innerHTML = '';
+  if (!mine.length) body.innerHTML = '<tr><td colspan="5" class="py-8 px-4 text-center text-slate-500 text-xs">No swims logged for this event yet. Add a time in the Time Log tab and your place will show up here.</td></tr>';
+  const medal = ['from-amber-300 to-yellow-500', 'from-slate-200 to-slate-400', 'from-orange-300 to-orange-600'];
+  mine.forEach((it, i) => {
+    const tr = document.createElement('tr'); tr.className = i === 0 ? 'bg-amber-400/10' : 'hover:bg-slate-800/40';
+    tr.innerHTML = `<td class="py-3 px-4"><span class="inline-flex w-8 h-8 items-center justify-center rounded-full font-black text-xs ${i < 3 ? 'bg-gradient-to-br text-slate-900 ' + medal[i] : 'bg-slate-800 text-slate-300'}">${i + 1}</span></td><td class="py-3 px-4 font-semibold text-white"></td><td class="py-3 px-4 font-mono font-bold text-brand-400">${formatTime(it.timeSec)}${i === 0 ? ' <span class="text-[10px] text-amber-400">BEST</span>' : ''}</td><td class="py-3 px-4 text-slate-400 text-xs">${it.date}</td><td class="py-3 px-4 text-slate-400 text-xs"></td>`;
+    tr.children[1].textContent = it.swimmerName || userProfile.name; tr.children[4].textContent = it.notes || '';
+    body.appendChild(tr);
+  });
+  const keys = {}; swimLogs.forEach(l => { const k = l.dist + '|' + l.stroke + '|' + l.course; (keys[k] = keys[k] || []).push(l); });
+  const ent = Object.entries(keys).sort((a, b) => b[1].length - a[1].length);
+  document.getElementById('lb-overview').innerHTML = ent.length ? ent.map(([k, arr]) => { const [d, s, c] = k.split('|'); const best = Math.min(...arr.map(l => l.timeSec)); return `<button onclick="jumpLb('${d}','${s}','${c}')" class="text-left bg-slate-900/80 border border-slate-700/70 hover:border-brand-400 rounded-xl p-3 transition"><div class="text-[10px] text-slate-400">${c}</div><div class="text-sm font-bold text-white">${evName(d, s)}</div><div class="font-mono font-bold text-brand-400 mt-1">${formatTime(best)}</div><div class="text-[10px] text-slate-500">${arr.length} swim${arr.length > 1 ? 's' : ''}</div></button>`; }).join('') : '<div class="text-xs text-slate-500 col-span-full">Your events will appear here once you log swims.</div>';
+}
+function jumpLb(d, s, c) { document.getElementById('leader-dist').value = d; document.getElementById('leader-stroke').value = s; document.getElementById('leader-course').value = c; updateLeaderboardView(); }
+/* ---- time standards (own section) ---- */
+let stInit = false;
+function initStandards() { if (!stInit) { useProfileStd(); stInit = true; } renderStandards(); }
+function useProfileStd() { document.getElementById('st-gender').value = userProfile.gender; document.getElementById('st-age').value = userProfile.ageGroup; renderStandards(); }
+function renderStandards() {
+  const g = document.getElementById('st-gender').value, a = document.getElementById('st-age').value, course = document.getElementById('st-course').value;
+  const box = document.getElementById('st-table');
+  if (course !== 'SCY') { box.innerHTML = '<div class="text-slate-400 text-sm py-6 text-center">Only short-course yards (SCY) standards are loaded in this version.</div>'; document.getElementById('st-result').textContent = ''; return; }
+  const cat = STD_SCY[(g === 'Female' ? 'Girls' : 'Boys') + '|' + a];
+  const colr = ['text-slate-300', 'text-sky-300', 'text-cyan-300', 'text-emerald-300', 'text-amber-300', 'text-fuchsia-300'];
+  box.innerHTML = '<table class="w-full text-sm text-center"><thead><tr class="text-xs text-slate-400 border-b border-slate-700"><th class="py-2 text-left px-2">Event</th>' + LEVELS.map(l => `<th class="py-2">${l}</th>`).join('') + '</tr></thead><tbody>' + Object.entries(cat).map(([k, v]) => { const [d, s] = k.split('|'); return `<tr class="border-b border-slate-800/70 hover:bg-slate-800/40"><td class="py-2 px-2 text-left font-semibold text-white">${evName(d, s)}</td>${v.map((t, i) => `<td class="py-2 font-mono ${colr[i]}">${formatTime(t)}</td>`).join('')}</tr>`; }).join('') + '</tbody></table>';
+  checkStd();
+}
+function checkStd() {
+  const g = document.getElementById('st-gender').value, a = document.getElementById('st-age').value, course = document.getElementById('st-course').value, out = document.getElementById('st-result');
+  const t = parseToSeconds(document.getElementById('st-min').value, document.getElementById('st-sec').value, document.getElementById('st-ms').value);
+  if (t <= 0) { out.textContent = 'Enter a time to see which level it reaches.'; return; }
+  const st = getStandards(...document.getElementById('st-event').value.split('|'), course, g, a);
+  if (!st) { out.textContent = 'No standards for this event in this version.'; return; }
+  let hit = -1; LEVELS.forEach((l, i) => { if (t <= st[l]) hit = i; });
+  const nxt = hit < 5 ? LEVELS[hit + 1] : null;
+  out.innerHTML = `<span class="text-2xl font-black text-emerald-400">${hit < 0 ? 'Below B' : LEVELS[hit]}</span> ` + (nxt ? `<span class="text-slate-300 text-sm ml-2">Next: ${nxt} at ${formatTime(st[nxt])} (${(t - st[nxt]).toFixed(2)} s to drop)</span>` : '<span class="text-amber-300 text-sm ml-2">Top level reached!</span>');
+}
+/* ---- 3 timers ---- */
+const lanes = [0, 1, 2].map(i => ({name: 'Swimmer ' + (i + 1), run: false, t0: 0, el: 0, laps: []}));
+const fmtClock = s => { const m = Math.floor(s / 60), r = s - m * 60; return String(m).padStart(2, '0') + ':' + r.toFixed(2).padStart(5, '0'); };
+const LCOL = ['emerald', 'sky', 'fuchsia'];
+function renderLane(i) {
+  const L = lanes[i], c = LCOL[i];
+  document.getElementById('ln-' + i).innerHTML = `<div class="flex items-center gap-2 mb-3"><span class="w-7 h-7 rounded-full bg-${c}-500/20 text-${c}-300 flex items-center justify-center text-xs font-black border border-${c}-400/40">${i + 1}</span><input value="${L.name.replace(/"/g, '')}" oninput="lanes[${i}].name=this.value" class="flex-1 bg-slate-950/60 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white" aria-label="Swimmer name"></div>
+  <div id="ld-${i}" class="font-mono text-4xl font-black text-${c}-300 text-center py-4 rounded-xl bg-slate-950/70 border border-${c}-400/20">${fmtClock(L.el / 1000)}</div>
+  <div class="grid grid-cols-3 gap-2 mt-3"><button onclick="laneToggle(${i})" class="rounded-lg py-2 text-xs font-bold text-white ${L.run ? 'bg-amber-600' : 'bg-emerald-600'}">${L.run ? 'Pause' : L.el ? 'Resume' : 'Start'}</button><button onclick="laneSplit(${i})" ${L.el ? '' : 'disabled'} class="rounded-lg py-2 text-xs font-bold text-white bg-slate-700 disabled:opacity-40">Split</button><button onclick="laneReset(${i})" class="rounded-lg py-2 text-xs font-bold text-white bg-red-600/80">Reset</button></div>
+  <button onclick="laneLog(${i})" ${L.el ? '' : 'disabled'} class="mt-2 w-full rounded-lg py-2 text-xs font-bold text-brand-300 border border-brand-400/40 hover:bg-brand-500/10 disabled:opacity-40">Send time to my log</button>
+  <div class="mt-3 max-h-32 overflow-y-auto text-xs font-mono text-slate-300 space-y-1">${L.laps.length ? L.laps.map((x, k) => `<div class="flex justify-between border-b border-slate-800 py-0.5"><span>Split ${L.laps.length - k}</span><span class="text-${c}-300 font-bold">${x}</span></div>`).join('') : '<div class="text-slate-500 text-center py-1">No splits yet</div>'}</div>`;
+}
+function renderTimers() { [0, 1, 2].forEach(renderLane); }
+function laneToggle(i) { const L = lanes[i]; if (L.run) { L.el = Date.now() - L.t0; L.run = false; } else { L.t0 = Date.now() - L.el; L.run = true; } renderLane(i); }
+function laneSplit(i) { const L = lanes[i]; L.laps.unshift(fmtClock((L.run ? Date.now() - L.t0 : L.el) / 1000)); renderLane(i); }
+function laneReset(i) { const L = lanes[i]; L.run = false; L.el = 0; L.laps = []; renderLane(i); }
+function startAll() { lanes.forEach((L, i) => { if (!L.run) { L.t0 = Date.now() - L.el; L.run = true; renderLane(i); } }); }
+function stopAll() { lanes.forEach((L, i) => { if (L.run) { L.el = Date.now() - L.t0; L.run = false; renderLane(i); } }); }
+function resetAll() { [0, 1, 2].forEach(laneReset); }
+function laneLog(i) {
+  const L = lanes[i], s = (L.run ? Date.now() - L.t0 : L.el) / 1000;
+  document.getElementById('input-min').value = Math.floor(s / 60); document.getElementById('input-sec').value = Math.floor(s % 60); document.getElementById('input-ms').value = Math.round((s % 1) * 100);
+  document.getElementById('input-notes').value = L.name + ' (timer)'; switchTab('tracker'); calculateLiveStandard();
+}
+setInterval(() => { lanes.forEach((L, i) => { if (L.run) { const e = document.getElementById('ld-' + i); if (e) e.textContent = fmtClock((Date.now() - L.t0) / 1000); } }); }, 50);
+/* ---- set builder (rule-based coach, no live AI) ---- */
+const SB_EX = ['I have 45 minutes, intermediate swimmer, want to improve my 100 freestyle speed', 'Beginner, 30 minutes, working on endurance', 'Advanced, 60 min, butterfly sprint practice, sore shoulder', 'Triathlon open water prep, 40 minutes', 'Easy recovery swim 25 minutes after a meet'];
+let sbVariant = 0;
+function sbParse(t) {
+  const x = t.toLowerCase(), m = x.match(/(\d+)\s*(?:min|minute)/), o = {min: m ? Math.min(120, Math.max(15, +m[1])) : 45};
+  o.level = /beginner|new to|just started|novice/.test(x) ? 'beginner' : /advanced|elite|competitive|college/.test(x) ? 'advanced' : 'intermediate';
+  o.goal = /recover|easy|rest day|cool/.test(x) ? 'recovery' : /sprint|speed|fast|power|50 free|short/.test(x) ? 'sprint' : /technique|form|drill|stroke fix|efficien/.test(x) ? 'technique' : /endur|distance|long|stamina|aerobic|mile|1500|mile/.test(x) ? 'endurance' : /triathlon|open water|ocean|lake/.test(x) ? 'openwater' : 'balanced';
+  o.stroke = /butterfly|\bfly\b/.test(x) ? 'butterfly' : /backstroke|\bback\b/.test(x) ? 'backstroke' : /breaststroke|\bbreast\b/.test(x) ? 'breaststroke' : /\bim\b|medley/.test(x) ? 'IM' : 'freestyle';
+  o.shoulder = /shoulder/.test(x); o.knee = /knee|hip pain/.test(x); o.noKick = /no kick|without kick|can't kick/.test(x) || o.knee; o.noPull = /no pull|without pull/.test(x) || o.shoulder;
+  return o;
+}
+function sbBuild(t) {
+  const o = sbParse(t), v = sbVariant % 2, rate = {beginner: 22, intermediate: 32, advanced: 42}[o.level] * ({sprint: .8, recovery: .7, technique: .85}[o.goal] || 1);
+  const r25 = n => Math.max(100, Math.round(n / 50) * 50), total = Math.max(400, Math.round(o.min * rate / 100) * 100);
+  const rest = {beginner: ':25', intermediate: ':20', advanced: ':15'}[o.level], st = o.shoulder && o.stroke === 'butterfly' ? 'freestyle' : o.stroke, S = [];
+  const warm = r25(total * .18), cool = total >= 1000 ? 100 : 50;
+  S.push(['Warm-up', `${warm} easy freestyle, mixing swim / kick / drill by 50`, warm]);
+  let drill = r25(total * (o.goal === 'technique' ? .25 : .1)), dn = Math.max(2, Math.round(drill / 50));
+  S.push(['Drill', `${dn} x 50 ${st} drill / swim by 25 (rest ${rest})`, dn * 50]); drill = dn * 50;
+  let kp = 0;
+  if (!o.noKick && o.goal !== 'recovery') { const k = Math.max(2, Math.round(total * .1 / 50)); S.push(['Kick', `${k} x 50 kick with board or streamline (rest :15)`, k * 50]); kp += k * 50; }
+  else if (!o.noPull && o.goal !== 'recovery' && o.level !== 'beginner') { const k = Math.max(2, Math.round(total * .1 / 100)); S.push(['Pull', `${k} x 100 pull with buoy (rest :15)`, k * 100]); kp += k * 100; }
+  const main = Math.max(100, total - warm - drill - kp - cool); let line, used;
+  if (o.goal === 'sprint') { const round = o.level === 'beginner' ? 150 : 300, rounds = Math.max(1, Math.floor(main / round)); line = o.level === 'beginner' ? `${rounds} x (6 x 25 fast, rest :30)` : `${rounds} x (8 x 25 max effort, rest :40 + 100 easy)`; used = rounds * round; }
+  else if (o.goal === 'endurance' || o.goal === 'openwater') { const rep = o.level === 'beginner' ? 100 : o.level === 'intermediate' ? 200 : 400, k = Math.max(2, Math.floor(main / rep)); line = `${k} x ${rep} ${st} steady, rest ${rest}` + (o.goal === 'openwater' ? ', sight every 6 strokes' : ', hold the same pace every rep'); used = k * rep; }
+  else if (o.goal === 'technique') { const k = Math.max(2, Math.floor(main / 75)); line = `${k} x 75 ${st}: 25 drill, 25 slow swim, 25 normal swim (rest ${rest})`; used = k * 75; }
+  else if (o.goal === 'recovery') { line = `${main} easy continuous swim, every 4th length backstroke`; used = main; }
+  else { const rep = v ? 50 : 100, k = Math.max(3, Math.floor(main / rep)); line = `${k} x ${rep} ${st} at 80-85% effort, rest ${rest}`; used = k * rep; }
+  S.push(['Main set', line, used]);
+  S.push(['Cool-down', `${cool} very easy, any stroke`, cool]);
+  const sum = S.reduce((a, x) => a + x[2], 0), notes = [];
+  if (o.shoulder) notes.push('Shoulder: no paddles and no butterfly, keep strokes smooth, stop if you feel sharp pain.');
+  if (o.knee) notes.push('Knee/hip: no breaststroke kick, use flutter kick only.');
+  notes.push(o.goal === 'sprint' ? 'Full rest matters. Quality of each fast 25 beats quantity.' : 'Keep your stroke long and relaxed. Count strokes per length and try to hold it steady.');
+  return {o, S, sum, notes};
+}
+function runBuilder(again) {
+  if (again) sbVariant++; else sbVariant = 0;
+  const t = document.getElementById('sb-text').value.trim(); if (!t) { document.getElementById('sb-out').innerHTML = '<div class="text-slate-400 text-sm">Describe your swim first, for example: how long you have, your level and your goal.</div>'; return; }
+  const r = sbBuild(t);
+  document.getElementById('sb-out').innerHTML = `<div class="flex flex-wrap gap-2 mb-3 text-[11px]">${[r.o.min + ' min', r.o.level, r.o.goal, r.o.stroke].map(x => `<span class="px-2 py-1 rounded-full bg-brand-500/20 text-brand-300 border border-brand-400/30">${x}</span>`).join('')}</div>` +
+    r.S.map((x, i) => `<div class="flex gap-3 items-start py-2 border-b border-slate-800"><span class="w-7 h-7 rounded-full bg-gradient-to-br from-brand-400 to-cyan-300 text-slate-900 text-xs font-black flex items-center justify-center shrink-0">${i + 1}</span><div class="flex-1"><div class="text-xs text-slate-400 uppercase tracking-wide">${x[0]} - ${x[2]}</div><div class="text-white text-sm">${x[1]}</div></div></div>`).join('') +
+    `<div class="mt-3 text-lg font-black text-amber-300">Total: ${r.sum} (yards or meters)</div><ul class="mt-2 text-xs text-slate-400 space-y-1 list-disc pl-4">${r.notes.map(n => `<li>${n}</li>`).join('')}</ul>`;
+  window._sbText = r.S.map(x => x[0] + ': ' + x[1]).join('\n') + '\nTotal: ' + r.sum;
+}
+function copySet() { navigator.clipboard && navigator.clipboard.writeText(window._sbText || '').then(() => { const b = document.getElementById('sb-copy'); b.textContent = 'Copied'; setTimeout(() => b.textContent = 'Copy set', 1500); }); }
+/* ---- dryland player ---- */
+let exI = 0, dryRaf = 0, dryT0 = 0, drySpeed = 1;
+function renderDryList() {
+  document.getElementById('dry-list').innerHTML = DL.EX.map((e, i) => `<button onclick="selectEx(${i})" class="dry-item ${i === exI ? 'sel' : ''}"><span class="font-bold text-sm text-white">${e.name}</span><span class="text-[11px] text-slate-400">${e.tag}</span></button>`).join('');
+}
+function selectEx(i) {
+  exI = i; dryT0 = performance.now(); renderDryList(); const e = DL.EX[i];
+  document.getElementById('dry-title').textContent = e.name; document.getElementById('dry-sets').textContent = e.sets; document.getElementById('dry-tag').textContent = e.tag;
+  document.getElementById('dry-why').textContent = e.why; document.getElementById('dry-cues').innerHTML = e.cues.map(c => `<li>${c}</li>`).join('');
+}
+function dryFrame(ts) {
+  const e = DL.EX[exI], el = (ts - dryT0) / 1000 * drySpeed, u = (el / e.period) % 1;
+  document.getElementById('dry-svg').innerHTML = DL.figureSvg(e, u, el);
+  document.getElementById('dry-count').textContent = e.isHold ? Math.floor(el) + ' s hold' : 'Rep ' + (Math.floor(el / e.period) + 1);
+  dryRaf = requestAnimationFrame(dryFrame);
+}
+function startDry() { stopDry(); dryT0 = performance.now(); renderDryList(); selectEx(exI); dryRaf = requestAnimationFrame(dryFrame); }
+function stopDry() { cancelAnimationFrame(dryRaf); dryRaf = 0; }
+
+/* ---- personalized home dryland plan ---- */
+let dpTouched = false;
+const DP_AGE = {
+  '10U': {sets: '1-2', reps: '8-12', hold: '10-20 s', load: 'bodyweight only, make it playful'},
+  '11-12': {sets: '2', reps: '8-12', hold: '15-25 s', load: 'bodyweight and a light band'},
+  '13-14': {sets: '2-3', reps: '8-12', hold: '20-35 s', load: 'bodyweight and band, 3-second lowering'},
+  '15-16': {sets: '3', reps: '6-10', hold: '30-45 s', load: 'harder progressions; add a light backpack only when form is perfect'},
+  '17-18': {sets: '3', reps: '6-10', hold: '40-60 s', load: 'single-leg progressions; add a loaded backpack only when form is perfect'}
+};
+const DPX = {
+  squat: ['Squat', 'Chest tall, sit back and down, knees over toes'],
+  pushup: ['Push-up', 'Straight line head to heels; use knees or a counter if form breaks'],
+  bridge: ['Glute bridge', 'Squeeze glutes, ribs down, pause 1 s at the top'],
+  hinge: ['Hip hinge', 'Hands on hips, push hips back with a flat back'],
+  split: ['Split squat', 'Long step, front knee over mid-foot, lower with control'],
+  scap: ['Scapular push-up', 'Arms straight, push the floor away, then let the blades squeeze'],
+  row: ['Band row (or towel pull)', 'Squeeze shoulder blades together, no shrugging'],
+  ytw: ['Prone Y-T-W raises', 'Face down, thumbs up, lift arms without arching your back'],
+  er: ['Band external rotation', 'Elbow at your side, rotate out, lower for 3 s'],
+  slide: ['Wall slides', 'Forearms on wall, slide up, keep ribs down'],
+  plank: ['Front plank', 'Straight line, squeeze glutes, keep breathing'],
+  side: ['Side plank', 'Hips stacked, hold, then switch sides'],
+  dead: ['Dead bug', 'Low back stays on the floor; move opposite arm and leg slowly'],
+  pallof: ['Band anti-rotation press (or plank shoulder taps)', 'Resist the twist, hips stay still'],
+  super: ['Superman hold', 'Lift chest and legs a little, neck long'],
+  hop: ['Hop and hold (single leg)', 'Land softly, knee over toes, freeze 2 s. Under 11: balance only'],
+  jump: ['Squat jump, soft landing', 'Land quietly, bend hips and knees'],
+  ham: ['Hamstring bridge walk-outs', 'Walk heels out slowly, hips up, then return'],
+  calf: ['Heel-calf raises', 'Rise slowly, pause, lower for 3 s'],
+  lunge: ['Reverse lunge', 'Step back, front knee over mid-foot'],
+  bwalk: ['Lateral band walk (or side-lying leg raise)', 'Knees out, small steps'],
+  thor: ['Thoracic extension over a rolled towel', 'Hands behind head, extend gently over the roll'],
+  hip: ['90/90 hip switch', 'Sit tall, rotate both knees side to side'],
+  frog: ['Frog stretch', 'Knees wide, rock hips back, stay pain-free'],
+  ankle: ['Ankle stretch', 'Kneel and sit back gently on your heels'],
+  lat: ['Wall lat stretch', 'Hands on wall, sink your chest down'],
+  stream: ['Streamline hold on the floor', 'Biceps by ears, ribs down, reach tall']
+};
+const DP_STROKE = {
+  Freestyle: {st: ['row', 'pallof'], mob: ['lat', 'thor']},
+  Backstroke: {st: ['bridge', 'ytw'], mob: ['thor', 'slide']},
+  Breaststroke: {st: ['bwalk', 'split'], mob: ['frog', 'ankle', 'hip']},
+  Butterfly: {st: ['dead', 'super'], mob: ['thor', 'slide']},
+  IM: {st: ['row', 'bridge'], mob: ['thor', 'hip']}
+};
+function dpMainStroke() {
+  const c = {}; swimLogs.forEach(l => c[l.stroke] = (c[l.stroke] || 0) + 1);
+  const e = Object.entries(c).sort((a, b) => b[1] - a[1]);
+  return e.length ? e[0][0] : 'Freestyle';
+}
+function dpInsight(stroke) {
+  const logs = swimLogs.filter(l => l.stroke === stroke), best = {sp: null, di: null};
+  logs.forEach(l => { const r = estimateRank(l.dist, l.stroke, l.timeSec, l.course); if (!r) return; const k = (l.dist === '50' || l.dist === '100') ? 'sp' : 'di'; if (best[k] == null || r.pct < best[k]) best[k] = r.pct; });
+  let focus = 'balanced', txt, easy = false;
+  if (!logs.length) txt = 'No swims logged for this stroke yet, so this is a balanced base plan. Log some swims and it will adapt.';
+  else if (best.sp != null && best.di != null && Math.abs(best.sp - best.di) >= 10) {
+    if (best.sp < best.di) { focus = 'endurance'; txt = `Your sprints rank better (${fmtTop(best.sp)}) than your longer events (${fmtTop(best.di)}), so trunk endurance is emphasized.`; }
+    else { focus = 'power'; txt = `Your longer events rank better (${fmtTop(best.di)}) than your sprints (${fmtTop(best.sp)}), so explosive work is emphasized.`; }
+  } else txt = 'Your sprint and longer-event rankings are similar (or only one type is logged), so the plan stays balanced.';
+  const last = [...logs].sort((a, b) => new Date(b.date) - new Date(a.date) || b.id - a.id)[0];
+  if (last) {
+    const same = logs.filter(l => l.dist === last.dist && l.course === last.course), pb = Math.min(...same.map(l => l.timeSec)), off = (last.timeSec / pb - 1) * 100;
+    if (off > 2) { easy = true; txt += ` Your latest ${last.dist} ${last.stroke} was ${off.toFixed(1)}% slower than your best, so this week drops one set per exercise. Check sleep and fatigue; one slow swim is not proof of a problem.`; }
+    else if (off === 0 && same.length > 1) txt += ' Your latest swim is a personal best, so keep the same load.';
+  }
+  return {focus, easy, txt};
+}
+function dpBuild(age, gender, stroke, ins, mins) {
+  const A = DP_AGE[age] || DP_AGE['13-14'], S = DP_STROKE[stroke], girl = gender === 'Female';
+  const sets = A.sets + (ins.easy ? ' (minus 1 set)' : ''), hold = A.hold + (ins.focus === 'endurance' ? ' (long end)' : ''), sec = age === '10U' ? 20 : 30;
+  const fm = k => `<b>${DPX[k][0]}</b>`, cue = k => ` <span class='text-slate-400'>${DPX[k][1]}</span>`;
+  const r = k => `${fm(k)}: ${sets} x ${A.reps}.${cue(k)}`, h = k => `${fm(k)}: ${sets} x ${hold}.${cue(k)}`, mb = k => `${fm(k)}: 2 x ${sec} s, gentle.${cue(k)}`;
+  const B = (t, m, items, ev) => ({t, m, items, ev});
+  const warm = B('Warm-up', 10, ['Jumping jacks, arm circles, leg swings, inchworms, easy marching'], false);
+  const cool = B('Cool-down', 5, ['Wall lat stretch, doorway chest stretch, hamstring and hip stretches, slow breathing'], false);
+  const strk = B(`Stroke focus: ${stroke}`, 6, S.st.map(r), false);
+  const land = (m, full) => B('Landing and hip control', m, full ? [r('hop'), r('calf'), r('lunge'), r('ham'), r('bwalk')] : [r('hop'), r('calf')], girl);
+  const jump = age === '10U' ? [] : [`${fm('jump')}: ${ins.focus === 'power' ? '3' : '2'} x 5.${cue('jump')}`];
+  const fin = bl => { bl = bl.filter(Boolean); const sum = bl.reduce((a, b) => a + b.m, 0), f = mins / sum; bl.forEach(b => b.m = Math.max(2, Math.round(b.m * f))); const big = bl.reduce((a, b) => b.m > a.m ? b : a); big.m += mins - bl.reduce((a, b) => a + b.m, 0); return bl; };
+  const day = (d, title, bl) => { bl = fin(bl); return {day: d, title, blocks: bl, total: bl.reduce((a, b) => a + b.m, 0)}; };
+  return [
+    day('Mon', 'Strength A: legs, push, pull', [warm, B('Strength: legs and push', 15, [r('squat'), r('pushup'), r('bridge')], true), B('Pull and shoulder care', 12, [r('row'), r('er'), r('ytw')], true), strk, B('Core', 10, [h('plank'), r('dead')], false), girl && land(8, true), cool]),
+    day('Tue', 'Shoulder, mobility and core', [warm, B('Shoulder care circuit', 15, [r('er'), r('scap'), r('slide'), r('ytw')], true), B(`Mobility for ${stroke}`, 15, S.mob.map(mb), false), B('Core endurance', 10, [h('plank'), h('side'), h('super')].concat(ins.focus === 'endurance' ? [r('dead')] : []), false), B('Streamline and posture', 5, [`${fm('stream')}: 3 x 20 s.${cue('stream')}`], false), cool]),
+    day('Wed', 'Strength B: hips, legs, shoulders', [warm, B('Strength: hips and legs', 15, [r('hinge'), r('split'), r('scap')], true), B('Shoulder care', 12, [r('er'), r('slide'), r('ytw')], true), strk, B('Core', 10, [h('side'), r('super')], false), girl && land(8, true), cool]),
+    day('Thu', 'Shoulder, mobility and core', [warm, B('Shoulder care circuit', 15, [r('er'), r('scap'), r('slide'), r('ytw')], true), B(`Mobility for ${stroke}`, 15, S.mob.map(mb), false), B('Core endurance', 10, [h('plank'), h('side'), h('super')], false), B('Streamline and posture', 5, [`${fm('stream')}: 3 x 20 s.${cue('stream')}`], false), cool]),
+    day('Fri', 'Strength C: single-leg and power', [warm, B('Single-leg and power', 15, [r('lunge'), r('calf')].concat(jump), true), B('Pull and push', 10, [r('row'), r('pushup'), r('pallof')], true), strk, B('Core', 10, [h('plank'), h('side')], false), land(girl ? 8 : 4, girl), cool]),
+    day('Sat', 'Shoulder, mobility and core', [warm, B('Shoulder care circuit', 15, [r('er'), r('scap'), r('slide'), r('ytw')], true), B(`Mobility for ${stroke}`, 15, S.mob.map(mb), false), B('Core endurance', 10, [h('plank'), h('side'), h('super')], false), B('Streamline and posture', 5, [`${fm('stream')}: 3 x 20 s.${cue('stream')}`], false), cool]),
+    {day: 'Sun', title: 'Full rest day', rest: true, total: 0, blocks: [{t: 'Rest', m: 0, ev: true, items: ['No structured training. Sleep well, eat well, walk or play if you like. Rest days are part of the plan, not a missed workout.']}]}
+  ];
+}
+function renderPlan() {
+  const box = document.getElementById('dp-days'); if (!box) return;
+  const sel = document.getElementById('dp-stroke'); if (!dpTouched) sel.value = dpMainStroke();
+  const stroke = sel.value, mins = +document.getElementById('dp-min').value, age = userProfile.ageGroup;
+  const ins = dpInsight(stroke), A = DP_AGE[age] || DP_AGE['13-14'];
+  document.getElementById('dp-for').textContent = `${userProfile.gender === 'Female' ? 'Girls' : 'Boys'} ${age} - ${stroke}`;
+  document.getElementById('dp-insight').innerHTML = `<b class='text-white'>Why this plan:</b> ${ins.txt}<br><b class='text-white'>Load for ${age}:</b> ${A.load}. Rest 60 to 90 s between sets. Never train through sharp pain.`;
+  const today = (new Date().getDay() + 6) % 7;
+  box.innerHTML = dpBuild(age, userProfile.gender, stroke, ins, mins).map((d, i) => `<details ${i === today ? 'open' : ''} class='rounded-xl bg-slate-950/60 border border-slate-800 p-3'><summary class='cursor-pointer flex items-center gap-2'><span class='font-black text-white w-10'>${d.day}</span><span class='text-sm text-slate-200 flex-1'>${d.title}</span><span class='text-xs font-bold text-amber-300'>${d.rest ? 'Rest' : d.total + ' min'}</span></summary>${d.blocks.map(b => `<div class='mt-3'><div class='flex flex-wrap items-center gap-2 text-xs'><b class='text-cyan-300'>${b.t}${b.m ? ' (' + b.m + ' min)' : ''}</b><span class='px-1.5 rounded text-[10px] ${b.ev ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-700/60 text-slate-300'}'>${b.ev ? 'Evidence-based' : 'Coaching practice'}</span></div><ul class='list-disc pl-5 text-xs text-slate-200 mt-1 space-y-0.5'>${b.items.map(x => `<li>${x}</li>`).join('')}</ul></div>`).join('')}</details>`).join('');
+  lucide.createIcons();
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) stopDry(); else if (!document.getElementById('tab-dryland').classList.contains('hidden')) startDry(); });
+
+/* ---- goals, streaks, backup ---- */
+const dkey = d => new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+const logDay = l => /^\d{4}-\d{2}-\d{2}$/.test(l.date || '') ? l.date : (isNaN(new Date(l.date)) ? null : dkey(new Date(l.date)));
+function calcStreak() { const days = new Set(swimLogs.map(logDay)); let n = 0, d = new Date(); if (!days.has(dkey(d))) d.setDate(d.getDate() - 1); while (days.has(dkey(d))) { n++; d.setDate(d.getDate() - 1); } return n; }
+function weekDist() { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); const ws = dkey(d); return swimLogs.filter(l => (logDay(l) || '') >= ws).reduce((a, l) => a + (parseInt(l.dist) || 0), 0); }
+const getGoal = () => { const g = parseInt(localStorage.getItem(skey('goal'))); return isNaN(g) ? 3000 : g; };
+function refreshGoals() {
+  const goal = getGoal(), w = weekDist(), st = calcStreak(), pct = goal ? Math.min(100, w / goal * 100) : 0, $ = id => document.getElementById(id);
+  $('pf-streak').textContent = st; $('pf-week').textContent = w.toLocaleString() + ' m'; $('goal-bar').style.width = pct + '%';
+  if (document.activeElement !== $('goal-input')) $('goal-input').value = goal;
+  $('goal-text').textContent = goal ? (w >= goal ? 'Goal reached this week. Great work!' : `${(goal - w).toLocaleString()} m to go (${Math.round(pct)}% of ${goal.toLocaleString()} m)`) : 'Set a weekly goal to track your progress.';
+  $('hero-goal').textContent = (st ? `${st}-day streak. ` : 'Log a swim today to start a streak. ') + (goal ? `${Math.round(pct)}% of this week's goal.` : '');
+}
+function saveGoal() { const g = Math.max(0, parseInt(document.getElementById('goal-input').value) || 0); localStorage.setItem(skey('goal'), g); cloudNotify('settings'); refreshGoals(); }
+const _rht = renderHistoryTable; renderHistoryTable = function () { _rht.apply(this, arguments); refreshGoals(); };
+const _fp = fillProfile; fillProfile = function () { _fp.apply(this, arguments); refreshGoals(); };
+const dmsg = t => { document.getElementById('data-msg').textContent = t; };
+async function saveFile(name, data, type) {
+  try { const dl = window.claude ? await claude.use('downloads') : null; if (dl) { await dl.save({filename: name, data}); dmsg('Backup ready: ' + name); return; } } catch (e) { if (e && e.code === 'declined') { dmsg('Download cancelled.'); return; } }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], {type})); a.download = name; document.body.appendChild(a); a.click(); a.remove(); dmsg('Backup saved: ' + name);
+}
+const stamp = () => dkey(new Date());
+function exportJson() { if (!swimLogs.length) { dmsg('Nothing to export yet. Log a swim first.'); return; } saveFile(`aquatrack-backup-${stamp()}.json`, JSON.stringify({app: 'AquaTrack', version: 2, exported: new Date().toISOString(), goal: getGoal(), logs: swimLogs}, null, 1), 'application/json'); }
+function logsToCsv() { const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; return ['Date,Distance,Stroke,Course,Time,Seconds,Notes'].concat(swimLogs.map(l => [l.date, l.dist, l.stroke, l.course, formatTime(l.timeSec), l.timeSec, l.notes].map(q).join(','))).join('\n'); }
+function exportCsv() { if (!swimLogs.length) { dmsg('Nothing to export yet. Log a swim first.'); return; } saveFile(`aquatrack-swims-${stamp()}.csv`, logsToCsv(), 'text/csv'); }
+function parseImport(text) {
+  const o = JSON.parse(text); const arr = Array.isArray(o) ? o : o && o.logs; if (!Array.isArray(arr)) throw new Error('This file does not look like an AquaTrack backup.');
+  const strs = ['dist', 'stroke', 'course', 'date', 'notes', 'swimmerName', 'tier', 'timeFormatted', 'uid'], ok = [];
+  arr.slice(0, 5000).forEach((l, i) => { const t = Number(l && l.timeSec); if (!l || !(t > 0 && t < 36000) || !l.dist || !l.stroke || !l.course) return; const c = {id: Number(l.id) || Date.now() + i, timeSec: t}; strs.forEach(k => { if (l[k] != null) c[k] = String(l[k]).slice(0, 200); }); if (!c.date) c.date = dkey(new Date()); ok.push(c); });
+  return {logs: ok, goal: o && o.goal, skipped: arr.length - ok.length};
+}
+function importJson(inp) {
+  const f = inp.files && inp.files[0]; if (!f) return; const r = new FileReader();
+  r.onload = () => { try { const res = parseImport(String(r.result)); ensureUids(res.logs); const have = new Set(swimLogs.map(l => l.uid)), add = res.logs.filter(l => !have.has(l.uid));
+    swimLogs = swimLogs.concat(add).sort((a, b) => b.id - a.id); saveLogs(); cloudNotify('addMany', add);
+    if (Number.isFinite(res.goal) && localStorage.getItem(skey('goal')) == null) { localStorage.setItem(skey('goal'), res.goal); cloudNotify('settings'); }
+    renderHistoryTable(); if (typeof renderChart === 'function') renderChart(); updateLeaderboardView(); fillProfile();
+    dmsg(`Imported ${add.length} swim${add.length === 1 ? '' : 's'}` + (res.logs.length - add.length ? `, ${res.logs.length - add.length} already in the app` : '') + (res.skipped ? `, ${res.skipped} skipped (invalid)` : '') + '.'); } catch (e) { dmsg('Import failed: ' + e.message); } inp.value = ''; };
+  r.readAsText(f);
+}
+/* ---- friends ranking: swap short codes with friends (no account, nothing uploaded) ---- */
+var fcData = null;
+function fcLoad() {
+  if (fcData) return fcData;
+  fcData = readJson(skey('friends'), null);
+  if (!fcData || !fcData.id) fcData = {id: 'u' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4), nick: '', friends: {}};
+  return fcData;
+}
+function fcSave() { try { localStorage.setItem(skey('friends'), JSON.stringify(fcData)); } catch (e) {} }
+function fcMsg(m) { const el = document.getElementById('fc-msg'); if (el) el.textContent = m; }
+function fcBest() { const b = {}; swimLogs.forEach(l => { const k = l.dist + '_' + l.stroke + '_' + l.course; if (b[k] == null || l.timeSec < b[k]) b[k] = l.timeSec; }); return b; }
+function fcMe() { const d = fcLoad(); return {id: d.id, name: d.nick || 'Me', age: userProfile.ageGroup, gender: userProfile.gender, best: fcBest(), updated: Date.now()}; }
+function fcEnc(m) {
+  const j = JSON.stringify({i: m.id, n: m.name, a: m.age, g: m.gender === 'Female' ? 'F' : 'M', b: m.best, u: m.updated});
+  let s = ''; new TextEncoder().encode(j).forEach(x => s += String.fromCharCode(x));
+  return 'AQ1.' + btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function fcDec(c) {   // reads a friend code and rejects anything that looks wrong
+  try {
+    let b = c.slice(4).replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
+    const o = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b), ch => ch.charCodeAt(0))));
+    if (!/^[A-Za-z0-9]{3,24}$/.test(o.i) || typeof o.n !== 'string' || !o.n.trim() || o.n.length > 24 || !['10U', '11-12', '13-14', '15-16', '17-18'].includes(o.a) || !(o.g === 'F' || o.g === 'M') || !o.b || typeof o.b !== 'object') return null;
+    const best = {};
+    for (const k in o.b) { const v = o.b[k]; if (/^\d{2,4}_[A-Za-z]+_(SCY|LCM|SCM)$/.test(k) && typeof v === 'number' && v > 10 && v < 4000) best[k] = v; }
+    return {id: o.i, name: o.n.trim(), age: o.a, gender: o.g === 'F' ? 'Female' : 'Male', best, updated: Number(o.u) || 0};
+  } catch (e) { return null; }
+}
+function fcMakeCode() {
+  const d = fcLoad(), nick = document.getElementById('fc-nick').value.trim().slice(0, 24);
+  if (!nick) { alert('Type a nickname first. Please do not use your full name.'); return; }
+  d.nick = nick; fcSave();
+  document.getElementById('fc-code').value = fcEnc(fcMe()); fcMsg('Code ready. Copy it and send it to your friends.'); fcRender();
+}
+function fcCopy(id) {
+  const ta = document.getElementById(id); if (!ta || !ta.value) return; ta.select();
+  let ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+  if (ok) fcMsg('Copied.');
+  else if (navigator.clipboard) navigator.clipboard.writeText(ta.value).then(() => fcMsg('Copied.'), () => fcMsg('Select the text and copy it yourself.'));
+  else fcMsg('Select the text and copy it yourself.');
+}
+function fcAdd() {
+  const d = fcLoad(), codes = document.getElementById('fc-paste').value.match(/AQ1\.[A-Za-z0-9_-]+/g) || [];
+  let added = 0, updated = 0, bad = 0, self = 0;
+  codes.forEach(c => {
+    const m = fcDec(c); if (!m) { bad++; return; }
+    if (m.id === d.id) { self++; return; }
+    const old = d.friends[m.id];
+    if (!old) { if (Object.keys(d.friends).length >= 50) return; d.friends[m.id] = m; added++; }
+    else if (m.updated > old.updated) { d.friends[m.id] = m; updated++; }
+  });
+  fcSave(); document.getElementById('fc-paste').value = ''; fcRender();
+  fcMsg(!codes.length ? 'No friend codes found in that text.' : `Added ${added}, updated ${updated}${bad ? ', ' + bad + ' invalid' : ''}${self ? ', skipped your own code' : ''}.`);
+}
+function fcRemove(id) { const d = fcLoad(); delete d.friends[id]; fcSave(); fcRender(); }
+function fcBundle() {
+  const d = fcLoad(); if (!d.nick) { alert('Create your own code first so you are included.'); return; }
+  const box = document.getElementById('fc-bundle'); box.classList.remove('hidden');
+  box.value = [fcMe()].concat(Object.values(d.friends)).map(fcEnc).join('\n'); fcCopy('fc-bundle');
+}
+function fcAgo(u) { const days = Math.floor((Date.now() - u) / 864e5); return days < 1 ? 'today' : days + (days === 1 ? ' day ago' : ' days ago'); }
+function fcRender() {
+  const body = document.getElementById('fc-body'); if (!body) return;
+  const d = fcLoad(), nickEl = document.getElementById('fc-nick'); if (nickEl) nickEl.value = d.nick || '';
+  const dist = document.getElementById('leader-dist').value, stroke = document.getElementById('leader-stroke').value, course = document.getElementById('leader-course').value, key = dist + '_' + stroke + '_' + course;
+  document.getElementById('fc-title').textContent = `${evName(dist, stroke)} ${course}`;
+  const rows = (d.nick ? [fcMe()] : []).concat(Object.values(d.friends)).filter(m => m.best[key] > 0).sort((a, b) => a.best[key] - b.best[key]);
+  body.innerHTML = '';
+  if (!rows.length) { body.innerHTML = "<tr><td colspan='6' class='py-6 px-3 text-center text-slate-500 text-xs'>" + (d.nick ? 'Nobody has a time in this event yet. Add friend codes above.' : 'Create your code to join the ranking, then add friend codes.') + "</td></tr>"; return; }
+  rows.forEach((m, i) => {
+    const t = m.best[key], rk = estimateRank(dist, stroke, t, course, m.gender, m.age), me = m.id === d.id;
+    const tr = document.createElement('tr'); tr.className = me ? 'bg-cyan-400/10' : 'hover:bg-slate-800/40';
+    tr.innerHTML = "<td class='py-2 px-3 font-black text-white'>" + (i + 1) + "</td><td class='py-2 px-3 font-semibold text-white'></td><td class='py-2 px-3 font-mono'>" + formatTime(t) + "</td><td class='py-2 px-3 text-slate-300'>" + (i ? '+' + (t - rows[0].best[key]).toFixed(2) + 's' : 'Leader') + "</td><td class='py-2 px-3 text-cyan-300 font-bold'>" + (rk ? fmtTop(rk.pct) : '-') + "</td><td class='py-2 px-3'></td>";
+    const c = tr.children[1]; c.textContent = m.name + (me ? ' (you)' : '') + ' - ' + m.age;   // textContent = safe for any nickname
+    if (!me) {
+      const sp = document.createElement('span'); sp.className = 'block text-[10px] font-normal text-slate-500'; sp.textContent = 'code from ' + fcAgo(m.updated); c.appendChild(sp);
+      const bt = document.createElement('button'); bt.className = 'text-xs text-rose-300'; bt.textContent = 'Remove'; bt.onclick = () => fcRemove(m.id); tr.children[5].appendChild(bt);
+    }
+    body.appendChild(tr);
+  });
+}
+/* ---- init ---- */
+(function () {
+  document.getElementById('sb-chips').innerHTML = SB_EX.map(x => `<button type="button" onclick="document.getElementById('sb-text').value=this.textContent;runBuilder()" class="text-left text-[11px] px-3 py-1.5 rounded-full bg-slate-900/80 border border-slate-700 hover:border-brand-400 text-slate-300 transition">${x}</button>`).join('');
+  document.getElementById('hero-quote').textContent = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+  if (ensureUids(swimLogs)) saveLogs();
+  applyBg(bgIndex); renderTimers(); updateProfileUI(); switchTab('tracker'); refreshGoals();
+})();
+
+</script>
+<!-- Accounts: loaded last. If any of these fail to load, Guest Mode still works. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1"></script>
+<script src="cloud.js"></script>
+<script>if (window.Cloud) Cloud.init();</script>
+</body>
+</html>
